@@ -114,6 +114,11 @@ class Polylang_SDL {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-api.php';
 
 		/**
+		 * The class responsible for working with translation files.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-files.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-admin.php';
