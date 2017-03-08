@@ -29,7 +29,6 @@ class Polylang_SDL_Create_XLIFF {
     		echo '<b>Console: </b>'. $msg .'<br />';
     	}
     }
-
     private function create_unique($id){
         $type = get_post_type($id);
         $unique = $type . '_' . $id;

@@ -16,17 +16,26 @@ class Polylang_SDL_Unpack_XLIFF {
     		echo '<b>Console: </b>'. $msg .'<br />';
     	}
     }
+    private function create_unique(){
+        $type = get_post_type($this->structure['id']);
+        $unique = $type . '_' . $this->structure['id'];
+        return $unique;
+    }
+    public function convert($id){
+        $this->structure['id'] = $id;
 
-    public function convert($filename){
+        $filename = $this->create_unique() . '.xliff';
     	$this->doc->load($this->xliff_storage_path . $filename);
+
     	$this->extract_attributes();
     	$this->extract_structure();
+
     	return $this->structure;
     }
     private function extract_attributes(){
     	$file = $this->doc->getElementsByTagName('file');
-    	$this->attributes['source-language'] = $file[0]->getAttribute('source-language');
-    	$this->attributes['target-language'] = $file[0]->getAttribute('target-language');
+    	$this->structure['attributes']['source-language'] = $file[0]->getAttribute('source-language');
+    	$this->structure['attributes']['target-language'] = $file[0]->getAttribute('target-language');
     }
     private function extract_structure(){
     	$units = $this->doc->getElementsByTagName('trans-unit');
