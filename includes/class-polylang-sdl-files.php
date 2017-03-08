@@ -2,7 +2,7 @@
 
 class Polylang_SDL_Files {
 
-	private $translation_storage_path;
+	public $translation_storage_path;
 	private $verbose = true;
 
     public function __construct() {
@@ -30,6 +30,12 @@ class Polylang_SDL_Files {
 	        case "extracted":
 	            $folder = $this->translation_storage_path . 'received/unpacked/';
 	           	if(!file_exists($folder)) {
+		    		mkdir($folder);
+		    	}
+		    	return $folder;
+	        case "converted":
+	            $folder = $this->translation_storage_path . 'converted/';
+	            if(!file_exists($folder)) {
 		    		mkdir($folder);
 		    	}
 		    	return $folder;

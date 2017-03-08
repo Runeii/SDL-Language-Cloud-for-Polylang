@@ -99,5 +99,8 @@ class Polylang_SDL_Admin {
 		wp_enqueue_script( $this->polylang_sdl, plugin_dir_url( __FILE__ ) . 'js/polylang-sdl-admin.js', array( 'jquery' ), $this->version, false );
 
 	}
+	public function register_interface(){
+		
+	}
 
 }
