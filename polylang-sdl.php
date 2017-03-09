@@ -7,6 +7,7 @@
  * Description:       SDL Language Cloud integration for Poylang, for translating WordPress site content.
  * Version:           1.0.0
  * Author:            SDL
+ * Text Domain:		  languagecloud
  */
 
 // If this file is called directly, abort.
