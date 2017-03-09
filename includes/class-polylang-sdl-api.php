@@ -7,10 +7,13 @@ class Polylang_SDL_API {
 	private $password;
 	private $verbose = true;
 
-    public function __construct($username = null, $password = null) {
+    public function __construct($username = null, $password = null,$test = false) {
     	$this->username = $username ?: get_site_option('sdl_auth_username');
 		$this->password = $password ?: get_site_option('sdl_auth_password');
-		$this->connect_authtoken();
+		$this->authtoken = get_site_option('sdl_authtoken');
+		if($test === false){
+			$this->connect_authtoken();
+		}
     }
     private function verbose($msg) {
     	if($this->verbose === true) {
@@ -59,7 +62,7 @@ class Polylang_SDL_API {
 			return $response;
 		} else {
 			$this->verbose($httpcode . ": " . $response['Message']);
-			return false;
+			return $httpcode;
 		}
 	}
 	public function download($url, $data = false, $name, $where) {
@@ -122,12 +125,42 @@ class Polylang_SDL_API {
 			'password' => $this->password
 			);
 		$response = $this->call('POST', '/auth/token', $args, true);
-		if($response != false) {
-			$this->authtoken = array();
-			$this->authtoken = $response;
-			$this->authtoken['expiry'] = time() + $this->authtoken['expires_in'];
-			update_site_option('sdl_authtoken', $this->authtoken);
+		if($response === true) {
+			$this->connect_saveAuthToken();
 			$this->verbose("All good. We've connected");
+			return true;
+		} else {
+			return $httpcode;
+		}
+	}
+	private function connect_saveAuthToken($token){
+		$this->authtoken = array();
+		$this->authtoken = $token;
+		$this->authtoken['expiry'] = time() + $this->authtoken['expires_in'];
+		update_site_option('sdl_authtoken', $this->authtoken);
+	}
+	/*
+	// User testing functions
+	*/
+	public function test_loggedIn(){
+		if($this->connect_checkExpired()) {
+			return $this->testCredentials();
+		} else {
+			return true;
+		}
+	}
+	private function testCredentials(){
+		$args = array(
+			'grant_type' => 'password',
+			'username' => $this->username,
+			'password' => $this->password
+			);
+		$response = $this->call('POST', '/auth/token', $args, true);
+		if(is_array($response)) {
+			$this->connect_saveAuthToken($response);
+			return true;
+		} else {
+			return $response;
 		}
 	}
 
