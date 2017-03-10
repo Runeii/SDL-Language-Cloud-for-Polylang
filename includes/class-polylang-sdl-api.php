@@ -7,14 +7,15 @@ class Polylang_SDL_API {
 	private $password;
 	private $verbose = true;
 
-    public function __construct($username = null, $password = null,$test = false) {
-    	$this->username = $username ?: get_site_option('sdl_auth_username');
-		$this->password = $password ?: get_site_option('sdl_auth_password');
-    	if($this->password != null && $password = null) {
+    public function __construct($test = false, $username = null, $password = null) {
+    	$this->username = $username ?: get_site_option('sdl_settings_account_username');
+		$this->password = $password ?: get_site_option('sdl_settings_account_password');
+    	if($this->password != null && $password === null) {
 			$this->password = $this->decrypt($this->password);
     	}
 		$this->authtoken = get_site_option('sdl_authtoken');
 		if($test === false){
+			$this->verbose('This is not a test.');
 			$this->connect_authtoken();
 		}
     }
@@ -64,7 +65,7 @@ class Polylang_SDL_API {
 		if($httpcode == '200') { 
 			return $response;
 		} else {
-			$this->verbose($httpcode . ": " . $response['Message']);
+			$this->verbose('Test failed. HTTP code: '. $httpcode);
 			return $httpcode;
 		}
 	}
@@ -173,8 +174,9 @@ class Polylang_SDL_API {
 	public function user_options() {
 		$response = $this->call('GET', '/projects/options');
 		if($response != false) {
-			update_site_options('sdl_user_projectoptions', $response);
+			update_site_option('sdl_settings_projectoptions', $response);
 		}
+		return $response;
 	}
 
 	/*

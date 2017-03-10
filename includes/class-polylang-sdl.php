@@ -136,6 +136,11 @@ class Polylang_SDL {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-admin.php';
 
+		/**
+		 * The class responsible for defining all actions that occur in the admin post list area.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-admin-posts.php';
+
 		$this->loader = new Polylang_SDL_Loader();
 
 	}

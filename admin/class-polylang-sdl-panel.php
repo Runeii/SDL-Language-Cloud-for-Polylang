@@ -2,27 +2,27 @@
 if( isset( $_GET[ 'tab' ] ) ) {  
     $active_tab = $_GET[ 'tab' ];  
 } else if(is_network_admin()) {
-    $active_tab = 'network';
+    $active_tab = 'sites';
 } else {
-    $active_tab = 'overview';
+    $active_tab = 'dashboard';
 }
 ?>  
 <div id="sdl_settings" class="wrap">
     <h2>SDL Language Cloud for Polylang</h2>
     <?php settings_errors(); ?> 
     <?php
-        $API = new Polylang_SDL_API('andrewhill', 'Sdl2017', true);
+        $API = new Polylang_SDL_API(true);
         if($API->test_loggedIn()){
             ?>
             <div class="wp-filter">
                 <ul class="filter-links">
                 <?php if(is_network_admin()) { ?>
                     <li>
-                        <a href="?page=languagecloud&tab=network" class="<?php echo $active_tab == 'network' ? 'current' : ''; ?>">Network settings</a>
+                        <a href="?page=languagecloud&tab=sites" class="<?php echo $active_tab == 'sites' ? 'current' : ''; ?>">Sites setup</a>
                     </li>
                 <?php } ?>
                     <li>
-                        <a href="?page=languagecloud&tab=overview" class="<?php echo $active_tab == 'overview' ? 'current' : ''; ?>">Overview</a>  
+                        <a href="?page=languagecloud&tab=dashboard" class="<?php echo $active_tab == 'dashboard' ? 'current' : ''; ?>">Dashboard</a>  
                     </li>
                 <?php if(is_network_admin()) { ?>
                     <li>
@@ -32,18 +32,16 @@ if( isset( $_GET[ 'tab' ] ) ) {
                 </ul>
             </div>
                 <?php 
-                if( $active_tab == 'network' ) {  
+                if( $active_tab == 'sites' ) {  
+                    if( ! class_exists( 'SDL_Sites_Table' ) ) {
+                        require_once('class-polylang-sdl-admin–network–sites.php' );
+                    }
+                    $sitesTable = new SDL_Sites_Table();
+                    $sitesTable->prepare_items();
+                    $sitesTable->display();
+                } else if( $active_tab == 'dashboard' ) {
                     echo "<form action='options.php' method='post'>";
-                        settings_fields( 'sdl_settings_network_page' );
-                        do_settings_sections( 'sdl_settings_network_page' );
-                        submit_button();
-                    echo '</form>';
-                } else if( $active_tab == 'overview' ) {
-                    echo "<form action='options.php' method='post'>";
-                        echo '<h2>Overview</h2>';
-                        settings_fields( 'sdl_settings_overview_page' );
-                        do_settings_sections( 'sdl_settings_overview_page' );
-                        submit_button();
+                    echo '<h2>Our statistics, reports and overview will go here.</h2>';
                     echo '</form>';
                 } else if( $active_tab == 'account' ) {
                     echo "<form action='edit.php?action=sdl_settings_update_network_options' method='post'>";

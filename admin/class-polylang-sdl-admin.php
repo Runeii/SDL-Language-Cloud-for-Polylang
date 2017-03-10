@@ -49,19 +49,19 @@ class Polylang_SDL_Admin {
 
 		add_action( 'admin_init', 'sdl_settings_init' );
 		function sdl_settings_init() {
-			register_setting( 'sdl_settings_overview_page', 'sdl_settings' );
+			register_setting( 'sdl_settings_sites_page', 'sdl_settings' );
 			add_settings_section(
-				'sdl_settings_overview_section', 
+				'sdl_settings_sites_section', 
 				__( 'Your section description', 'languagecloud' ), 
-				'sdl_settings_overview_section_callback', 
-				'sdl_settings_overview_page'
+				'sdl_settings_sites_section_callback', 
+				'sdl_settings_sites_page'
 			);
 			add_settings_field( 
-				'sdl_settings_overview_', 
+				'sdl_settings_sites_', 
 				__( 'Settings field description', 'languagecloud' ), 
-				'sdl_settings_overview__render', 
-				'sdl_settings_overview_page', 
-				'sdl_settings_overview_section' 
+				'sdl_settings_sites__render', 
+				'sdl_settings_sites_page', 
+				'sdl_settings_sites_section' 
 			);
 		}
 		add_filter('network_admin_menu', 'sdl_settings_network_admin_menu');
@@ -126,10 +126,10 @@ class Polylang_SDL_Admin {
 			exit;
 		}
 
-		function sdl_settings_text_overview__render(  ) { 
+		function sdl_settings_text_sites__render(  ) { 
 
 		}
-		function sdl_settings_overview_section_callback(  ) { 
+		function sdl_settings_sites_section_callback(  ) { 
 			echo __( 'This section description', 'languagecloud' );
 		}
 	}
