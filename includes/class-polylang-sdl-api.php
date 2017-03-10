@@ -10,6 +10,9 @@ class Polylang_SDL_API {
     public function __construct($username = null, $password = null,$test = false) {
     	$this->username = $username ?: get_site_option('sdl_auth_username');
 		$this->password = $password ?: get_site_option('sdl_auth_password');
+    	if($this->password != null && $password = null) {
+			$this->password = $this->decrypt($this->password);
+    	}
 		$this->authtoken = get_site_option('sdl_authtoken');
 		if($test === false){
 			$this->connect_authtoken();
@@ -290,6 +293,21 @@ class Polylang_SDL_API {
 		} else {
 			return false;
 		}
+	}
+	private function decrypt($string) {
+	    $output = false;
+
+	    $encrypt_method = "AES-256-CBC";
+	    $secret_key = wp_salt();
+	    $secret_iv = 'languagecloud';
+	    $key = hash('sha256', $secret_key);
+	    
+	    // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
+	    $iv = substr(hash('sha256', $secret_iv), 0, 16);
+
+	    $output = openssl_decrypt(base64_decode($string), $encrypt_method, $key, 0, $iv);
+
+	    return $output;
 	}
 }
 

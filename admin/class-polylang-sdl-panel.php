@@ -2,7 +2,7 @@
 if( isset( $_GET[ 'tab' ] ) ) {  
     $active_tab = $_GET[ 'tab' ];  
 } else if(is_network_admin()) {
-    $active_tab = 'networksettings';
+    $active_tab = 'network';
 } else {
     $active_tab = 'overview';
 }
@@ -26,30 +26,34 @@ if( isset( $_GET[ 'tab' ] ) ) {
                     </li>
                 <?php if(is_network_admin()) { ?>
                     <li>
-                        <a href="?page=languagecloud&tab=account class="<?php echo $active_tab == 'account' ? 'current' : ''; ?>">Account Details</a>  
+                        <a href="?page=languagecloud&tab=account" class="<?php echo $active_tab == 'account' ? 'current' : ''; ?>">Account Details</a>  
                     </li>
                 <?php } ?>
                 </ul>
             </div>
-            <form action='options.php' method='post'>
                 <?php 
                 if( $active_tab == 'network' ) {  
-                    settings_fields( 'sdl_settings_network_page' );
-                    do_settings_sections( 'sdl_settings_network_page' );
-                    submit_button();
+                    echo "<form action='options.php' method='post'>";
+                        settings_fields( 'sdl_settings_network_page' );
+                        do_settings_sections( 'sdl_settings_network_page' );
+                        submit_button();
+                    echo '</form>';
                 } else if( $active_tab == 'overview' ) {
-                    echo '<h2>Overview</h2>';
-                    settings_fields( 'sdl_settings_overview_page' );
-                    do_settings_sections( 'sdl_settings_overview_page' );
-                    submit_button();
+                    echo "<form action='options.php' method='post'>";
+                        echo '<h2>Overview</h2>';
+                        settings_fields( 'sdl_settings_overview_page' );
+                        do_settings_sections( 'sdl_settings_overview_page' );
+                        submit_button();
+                    echo '</form>';
                 } else if( $active_tab == 'account' ) {
-                    echo '<h2>Account details</h2>';
-                    settings_fields( 'sdl_settings_account_page' );
-                    do_settings_sections( 'sdl_settings_account_page' );
-                    submit_button('Login to Language Cloud');
+                    echo "<form action='edit.php?action=sdl_settings_update_network_options' method='post'>";
+                        echo '<h2>Account details</h2>';
+                        settings_fields( 'sdl_settings_account_page' );
+                        do_settings_sections( 'sdl_settings_account_page' );
+                        submit_button('Login to Language Cloud');
+                    echo '</form>';
                 }
                 ?>
-            </form>
         <?php
         } else { ?>
             <div class="wp-filter">
@@ -60,25 +64,20 @@ if( isset( $_GET[ 'tab' ] ) ) {
                 </ul>  
             </div>
             <?php
-            if(is_network_admin()) {
-            ?>
-                <form action='options.php' method='post'>
-                    <?php 
-                    if( $active_tab == 'account' ) {  
-                        settings_fields( 'sdl_settings_account_page' );
-                        do_settings_sections( 'sdl_settings_account_page' );
-                        submit_button('Login to Language Cloud');
-                    }
-                    ?>
-                </form>
-            <?php 
+            if(is_network_admin() && $active_tab == 'account') {
+                echo "<form action='edit.php?action=sdl_settings_update_network_options' method='post'>";
+                    settings_fields( 'sdl_settings_account_page' );
+                    do_settings_sections( 'sdl_settings_account_page' ); 
+                    submit_button('Login to Language Cloud');
+                echo "</form>";
             } else { 
                 $url = network_admin_url('admin.php?page=languagecloud&tab=account');
-                ?>
+                echo "
                 <form>
                     <h2>Setup not completed</h2>
-                    <p>Please ask network administrator to visit the <a href="<?php echo $url; ?>">Network Settings page</a> to complete setup</p>
+                    <p>Please ask network administrator to visit the <a href='". $url ."'>Network Settings page</a> to complete setup</p>
                 </form>
-            <? }
+                ";
+            }
         } ?>
 </div>
