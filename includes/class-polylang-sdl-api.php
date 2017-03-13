@@ -14,6 +14,9 @@ class Polylang_SDL_API {
 			$this->password = $this->decrypt($this->password);
     	}
 		$this->authtoken = get_site_option('sdl_authtoken');
+		//While working offline, going to completely disable this section
+		//See also loggedin test, below
+		
 		if($test === false){
 			$this->verbose('This is not a test.');
 			$this->connect_authtoken();
@@ -147,11 +150,13 @@ class Polylang_SDL_API {
 	// User testing functions
 	*/
 	public function test_loggedIn(){
+		
 		if($this->connect_checkExpired()) {
 			return $this->testCredentials();
 		} else {
 			return true;
-		}
+		} 
+		return true;
 	}
 	private function testCredentials(){
 		$args = array(
@@ -173,10 +178,36 @@ class Polylang_SDL_API {
 	*/
 	public function user_options() {
 		$response = $this->call('GET', '/projects/options');
-		if($response != false) {
+		if(is_array($response)) {
 			update_site_option('sdl_settings_projectoptions', $response);
+			$options = array(
+				0 => array(
+					'Source' => array(),
+					'Target' => array()
+					)
+				);
+
+			foreach($response as $option) {
+				$options[$option['Id']] = array(
+					'Source' => array(),
+					'Target' => array()
+					);
+				foreach($option['LanguagePairs'] as $pair) {
+					$code = explode('-', $pair['Source']['Code']);
+					if(!in_array($code[0], $options[$option['Id']]['Source']) ) {
+						$options[$option['Id']]['Source'][] = $code[0];
+					}
+					$code = explode('-', $pair['Target']['Code']);
+					if(!in_array($code[0], $options[$option['Id']]['Target'])){
+						$options[$option['Id']]['Target'][] = $code[0];
+					}
+				}
+			}
+			update_site_option('sdl_settings_projectoptions_pairs', $options);
+			return $response;
+		} else {
+			return false;
 		}
-		return $response;
 	}
 
 	/*

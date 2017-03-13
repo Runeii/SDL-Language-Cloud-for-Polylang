@@ -1,18 +1,36 @@
 <?php
-
+if( $_POST['action'] == 'sdl_admin_updateoptions' ) {
+    $blog_id = intval( $_POST['blog_id'] );
+    $id = $_POST['options_set'];
+    update_blog_option($blog_id, 'projectoptions', $id);
+}
 // WP_List_Table is not loaded automatically so we need to load it in our application
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 }
+
 /**
  * Create a new table class that will extend the WP_List_Table
  */
 class SDL_Sites_Table extends WP_List_Table
 {
     private $options;
+    private $pairs;
 
     public function prepare_items()
     {
+        $this->options = get_site_option('sdl_settings_projectoptions');
+        //$this->options = null;
+        if($this->options === null || $this->options === false) {
+            $API = new Polylang_SDL_API();
+            $this->options = $API->user_options();
+        }
+        $this->pairs = get_site_option('sdl_settings_projectoptions_pairs');
+
+        if($this->options === null || $this->options === false){
+            echo 'break here';
+            die();
+        }
         $columns = $this->get_columns();
         $hidden = $this->get_hidden_columns();
         $sortable = $this->get_sortable_columns();
@@ -39,6 +57,7 @@ class SDL_Sites_Table extends WP_List_Table
         $columns = array(
             'blog_id'     => 'ID',
             'name'       => 'Name',
+            'options_id' => 'Options id',
             'url' => 'Location',
             'lang' => 'Language',
             'src_lang' => 'Source languages',
@@ -75,31 +94,33 @@ class SDL_Sites_Table extends WP_List_Table
         $sites = get_sites();
         $data = array();
         $network_lang = get_site_option('WPLANG' );
-        foreach($sites as $site) {
+            foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
+            $optionsid = get_blog_option($site->blog_id, 'projectoptions', '0');
             $data[] = array(
                 'blog_id' => $site->blog_id,
                 'name' => $details->blogname,
+                'options_id' => $optionsid,
                 'url' => $details->path,
                 'lang' => get_blog_option($site->blog_id, 'WPLANG', $network_lang),
-                'src_lang' => '',
-                'target_lang' => ''
+                'src_lang' => implode(', ', $this->pairs[$optionsid]['Source']),
+                'target_lang' => implode(', ', $this->pairs[$optionsid]['Target']),
                 );
         }
         return $data;
     }
     private function options_set($id){
-        $options = $this->options ?: get_site_option('sdl_settings_projectoptions');
-        if($options === null || $options === false) {
-            $API = new Polylang_SDL_API;
-            $options = $API->user_options();
-            $this->options = $options;
-        }
-        $selector = '<select>';
-        foreach($options as $option){
-            $selector .= '<option>' . $option['Name'] . '</option>';
+        $selector = '<form method="post" action="admin.php?page=languagecloud">';
+        $selector .= '<input type="hidden" name="action" value="sdl_admin_updateoptions" />';
+        $selector .= '<input type="hidden" name="blog_id" value="'. $id . '" />';
+        $selector .= '<select name="options_set">';
+        $selector .= '<option>– Select project options set –</option>';
+        foreach($this->options as $option){
+            $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
         }
         $selector .= '</select>';
+        $selector .= '<button>Update</button>';
+        $selector .= '</form>';
         return $selector;
     }
     public function column_default( $item, $column_name )
@@ -110,6 +131,7 @@ class SDL_Sites_Table extends WP_List_Table
             case 'url':
             case 'lang':
             case 'src_lang':
+            case 'options_id':
             case 'target_lang':
                 return $item[ $column_name ];
             case 'options':
