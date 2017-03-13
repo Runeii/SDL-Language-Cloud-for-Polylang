@@ -2,16 +2,18 @@
 if( $_POST['action'] == 'sdl_admin_updateoptions' ) {
     $blog_id = intval( $_POST['blog_id'] );
     $id = $_POST['options_set'];
-    update_blog_option($blog_id, 'projectoptions', $id);
+
+    $pairs = get_site_option('sdl_settings_projectoptions_pairs');
+    update_blog_option($blog_id, 'sdl_projectoptions', $id);
+
+    // Todo: This will only save on source language at present. Do we need to be able to handle multiple sources?
+    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', $pairs[$optionsid]['Source'][0]);
 }
-// WP_List_Table is not loaded automatically so we need to load it in our application
+
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 }
 
-/**
- * Create a new table class that will extend the WP_List_Table
- */
 class SDL_Sites_Table extends WP_List_Table
 {
     private $options;
@@ -20,7 +22,6 @@ class SDL_Sites_Table extends WP_List_Table
     public function prepare_items()
     {
         $this->options = get_site_option('sdl_settings_projectoptions');
-        //$this->options = null;
         if($this->options === null || $this->options === false) {
             $API = new Polylang_SDL_API();
             $this->options = $API->user_options();
@@ -66,37 +67,25 @@ class SDL_Sites_Table extends WP_List_Table
         );
         return $columns;
     }
-    /**
-     * Define which columns are hidden
-     *
-     * @return Array
-     */
+
     public function get_hidden_columns()
     {
         return array();
     }
-    /**
-     * Define the sortable columns
-     *
-     * @return Array
-     */
+
     public function get_sortable_columns()
     {
         return array('title' => array('title', false));
     }
-    /**
-     * Get the table data
-     *
-     * @return Array
-     */
+
     private function table_data()
     {
         $sites = get_sites();
         $data = array();
         $network_lang = get_site_option('WPLANG' );
-            foreach($sites as $site) {
+        foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
-            $optionsid = get_blog_option($site->blog_id, 'projectoptions', '0');
+            $optionsid = get_blog_option($site->blog_id, 'sdl_projectoptions', '0');
             $data[] = array(
                 'blog_id' => $site->blog_id,
                 'name' => $details->blogname,

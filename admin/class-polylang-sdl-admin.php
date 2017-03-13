@@ -22,6 +22,16 @@ class Polylang_SDL_Admin {
 		$this->polylang_sdl = $polylang_sdl;
 		$this->version = $version;
 		$this->register_interface();
+
+		add_action( 'current_screen', 'check_current_screen' ); 
+		function check_current_screen(){
+			if ( is_admin() ) {
+				$screen = get_current_screen();
+				if($screen->base == 'edit' && pll_is_translated_post_type($screen->post_type)) {
+					new Polylang_SDL_Admin_Posts;
+				}
+			}
+		}
 	}
 
 	public function enqueue_styles() {
@@ -49,19 +59,19 @@ class Polylang_SDL_Admin {
 
 		add_action( 'admin_init', 'sdl_settings_init' );
 		function sdl_settings_init() {
-			register_setting( 'sdl_settings_sites_page', 'sdl_settings' );
+			register_setting( 'sdl_settings_form_createproject', 'sdl_settings' );
 			add_settings_section(
-				'sdl_settings_sites_section', 
+				'sdl_settings_form_createproject_section', 
 				__( 'Your section description', 'languagecloud' ), 
-				'sdl_settings_sites_section_callback', 
-				'sdl_settings_sites_page'
+				'sdl_settings_form_createproject_callback', 
+				'sdl_settings_form_createproject'
 			);
 			add_settings_field( 
 				'sdl_settings_sites_', 
 				__( 'Settings field description', 'languagecloud' ), 
-				'sdl_settings_sites__render', 
-				'sdl_settings_sites_page', 
-				'sdl_settings_sites_section' 
+				'sdl_settings_form_createproject__render', 
+				'sdl_settings_form_createproject', 
+				'sdl_settings_form_createproject_section' 
 			);
 		}
 		add_filter('network_admin_menu', 'sdl_settings_network_admin_menu');

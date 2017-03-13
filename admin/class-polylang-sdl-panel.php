@@ -18,7 +18,7 @@ if( isset( $_GET[ 'tab' ] ) ) {
                 <ul class="filter-links">
                 <?php if(is_network_admin()) { ?>
                     <li>
-                        <a href="?page=languagecloud&tab=sites" class="<?php echo $active_tab == 'sites' ? 'current' : ''; ?>">Sites setup</a>
+                        <a href="?page=languagecloud&tab=sites" class="<?php echo $active_tab == 'sites' ? 'current' : ''; ?>">Network setup</a>
                     </li>
                 <?php } ?>
                     <li>
@@ -68,6 +68,13 @@ if( isset( $_GET[ 'tab' ] ) ) {
                     do_settings_sections( 'sdl_settings_account_page' ); 
                     submit_button('Login to Language Cloud');
                 echo "</form>";
+            } else if(is_network_admin()) {
+                echo "
+                <form>
+                    <h2>Setup not completed</h2>
+                    <p>Please visit the Account Details tab to complete setup</p>
+                </form>
+                ";
             } else { 
                 $url = network_admin_url('admin.php?page=languagecloud&tab=account');
                 echo "
