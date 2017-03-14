@@ -16,19 +16,18 @@ class Polylang_SDL_Admin {
 	private $option_name;
 
 	public function __construct( $polylang_sdl, $version ) {
-		if(!is_admin()) {
-			die();
-		}
-		$this->polylang_sdl = $polylang_sdl;
-		$this->version = $version;
-		$this->register_interface();
+		if(is_admin()) {
+			$this->polylang_sdl = $polylang_sdl;
+			$this->version = $version;
+			$this->register_interface();
 
-		add_action( 'current_screen', 'check_current_screen' ); 
-		function check_current_screen(){
-			if ( is_admin() ) {
-				$screen = get_current_screen();
-				if($screen->base == 'edit' && pll_is_translated_post_type($screen->post_type)) {
-					new Polylang_SDL_Admin_Posts;
+			add_action( 'current_screen', 'check_current_screen' ); 
+			function check_current_screen(){
+				if ( is_admin() ) {
+					$screen = get_current_screen();
+					if($screen->base == 'edit' && pll_is_translated_post_type($screen->post_type)) {
+						new Polylang_SDL_Admin_Posts;
+					}
 				}
 			}
 		}
