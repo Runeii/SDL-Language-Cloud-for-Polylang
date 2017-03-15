@@ -5,7 +5,7 @@ class Polylang_SDL_API {
 	private $authtoken;
 	private $username;
 	private $password;
-	private $verbose = true;
+	private $verbose = false;
 
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');
@@ -56,9 +56,34 @@ class Polylang_SDL_API {
 			));	
 		} else {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			  'Authorization: Bearer ' . $this->connect_authtoken()
+				'Authorization: Bearer ' . $this->connect_authtoken()
 			));
 		}
+	    curl_setopt($curl, CURLOPT_URL, $url);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		$this->verbose('Call to: '. $url);
+	    $result = curl_exec($curl);
+		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+	    curl_close($curl);
+	    $response = json_decode($result, true);
+		if($httpcode == '200') { 
+			return $response;
+		} else {
+			$this->verbose('Call failed. HTTP code: '. $httpcode);
+			return $httpcode;
+		}
+	}
+	public function callJSON($url, $data) {
+	    $curl = curl_init();
+	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
+	    
+	    curl_setopt($curl, CURLOPT_POST, 1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, JSON_encode($data));
+
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			'Content-Type: application/json',
+			'Authorization: Bearer ' . $this->connect_authtoken()
+		));
 	    curl_setopt($curl, CURLOPT_URL, $url);
 	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 	    $result = curl_exec($curl);
@@ -68,7 +93,7 @@ class Polylang_SDL_API {
 		if($httpcode == '200') { 
 			return $response;
 		} else {
-			$this->verbose('Test failed. HTTP code: '. $httpcode);
+			$this->verbose('JSON call failed. HTTP code: '. $httpcode . '. ' . $response);
 			return $httpcode;
 		}
 	}
@@ -92,7 +117,6 @@ class Polylang_SDL_API {
 		curl_setopt($curl, CURLOPT_TIMEOUT, 50);
 		curl_setopt($curl, CURLOPT_FILE, $file); 
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-
 		curl_exec($curl); 
 		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -132,11 +156,12 @@ class Polylang_SDL_API {
 			'password' => $this->password
 			);
 		$response = $this->call('POST', '/auth/token', $args, true);
-		if($response === true) {
-			$this->connect_saveAuthToken();
+		if(is_array($response)) {
+			$this->connect_saveAuthToken($response);
 			$this->verbose("All good. We've connected");
 			return true;
 		} else {
+			$this->verbose("We failed to reauthenticate. Error code: " . $httpcode);
 			return $httpcode;
 		}
 	}
@@ -251,7 +276,7 @@ class Polylang_SDL_API {
 			'Vendors' => Sets the vendor ID for this project,
 			'Due date' => When the project is due
 		) */
-		return $this->call('POST', '/projects/', $args);
+		return $this->callJSON('/projects', $args);
 	}
 	public function statusDetails($code, $value = null) {
 		$codes = array(
@@ -305,6 +330,39 @@ class Polylang_SDL_API {
 		} else {
 			return $codes[$code][$value];
 		} 
+	}
+	/*
+	// Translation
+	*/
+	public function file_upload($file, $optionsid) {
+		set_time_limit(0);
+	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1/files/' . $optionsid;
+		if (function_exists('curl_file_create')) {
+		  $cFile = curl_file_create($file);
+		} else {
+		  $cFile = '@' . realpath($file);
+		}
+		$post = array('file'=> $cFile, 'ProjectOptionsID' => $optionsid);
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+			'Authorization: Bearer ' . $this->connect_authtoken(),
+			'Content-Type: multipart/form-data',
+			'Expect:'
+		));
+		curl_setopt($curl, CURLOPT_URL,$url);
+		curl_setopt($curl, CURLOPT_POST,1);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
+	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+		$result = curl_exec ($curl);
+		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close ($curl);
+	    $response = json_decode($result, true);
+		if($httpcode == '201') { 
+			return $response;
+		} else {
+			$this->verbose('Upload failed. HTTP code: '. $httpcode);
+			return $httpcode;
+		}
 	}
 	/*
 	// Translation
