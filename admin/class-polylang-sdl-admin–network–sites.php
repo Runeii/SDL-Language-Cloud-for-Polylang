@@ -2,12 +2,9 @@
 if( $_POST['action'] == 'sdl_admin_updateoptions' ) {
     $blog_id = intval( $_POST['blog_id'] );
     $id = $_POST['options_set'];
-
     $pairs = get_site_option('sdl_settings_projectoptions_pairs');
     update_blog_option($blog_id, 'sdl_projectoptions', $id);
-
-    // Todo: This will only save on source language at present. Do we need to be able to handle multiple sources?
-    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', $pairs[$optionsid]['Source'][0]);
+    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', $pairs[$id]['Source'][0]);
 }
 
 if( ! class_exists( 'WP_List_Table' ) ) {

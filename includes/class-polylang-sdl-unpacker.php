@@ -22,20 +22,26 @@ class Polylang_SDL_Unpack_XLIFF {
         return $unique;
     }
     public function convert($id){
-        $this->structure['id'] = $id;
+        $this->structure['project_id'] = $id;
 
         $filename = $this->create_unique() . '.xliff';
-    	$this->doc->load($this->xliff_storage_path . $filename);
-
-    	$this->extract_attributes();
-    	$this->extract_structure();
-
-    	return $this->structure;
+        $files = scandir($this->xliff_storage_path . $id);
+        unset($files[0]);
+        unset($files[1]);
+        $posts = array();
+        foreach($files as $file) {
+            $this->doc->load($this->xliff_storage_path . $id . '/' . $file);        
+            $this->extract_attributes();
+            $this->extract_structure();
+            $posts[] = $this->structure;
+        }
+        return $posts;
     }
     private function extract_attributes(){
     	$file = $this->doc->getElementsByTagName('file');
-    	$this->structure['attributes']['source-language'] = $file[0]->getAttribute('source-language');
-    	$this->structure['attributes']['target-language'] = $file[0]->getAttribute('target-language');
+    	$this->structure['attributes']['source-language'] = strtolower($file[0]->getAttribute('source-language'));
+    	$this->structure['attributes']['target-language'] = strtolower($file[0]->getAttribute('target-language'));
+        $this->structure['id'] = explode('_', $file[0]->getAttribute('original'))[1];
     }
     private function extract_structure(){
     	$units = $this->doc->getElementsByTagName('trans-unit');

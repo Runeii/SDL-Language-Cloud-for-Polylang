@@ -3,7 +3,7 @@
 class Polylang_SDL_Files {
 
 	public $translation_storage_path;
-	private $verbose = true;
+	private $verbose = false;
 
     public function __construct() {
     	$uploads = wp_upload_dir();

@@ -2,7 +2,7 @@
 
 class Polylang_SDL_Local {
 
-	private $verbose = true;
+	private $verbose = false;
     private $post_structure;
     private $syslangs;
     public function __construct() {
@@ -40,12 +40,16 @@ class Polylang_SDL_Local {
         } else {
             $this->update_translation_post($id);
         }
-        foreach($this->post_structure['taxonomy'] as $tax => $terms) {
-            $trans_terms = $this->save_taxonomy_translations($tax, $terms);
-            $this->post_structure['translated_taxonomies'][$tax] = $trans_terms;
+        if(array_key_exists('taxonomy', $this->post_structure)) {
+            foreach($this->post_structure['taxonomy'] as $tax => $terms) {
+                $trans_terms = $this->save_taxonomy_translations($tax, $terms);
+                $this->post_structure['translated_taxonomies'][$tax] = $trans_terms;
+            }
+            $this->attach_taxonomy_translations($this->post_structure['translated_taxonomies'], $id);
         }
-        $this->attach_taxonomy_translations($this->post_structure['translated_taxonomies'], $id);
-        $this->save_meta_translations($this->post_structure['meta'], $id);
+        if(array_key_exists('meta', $this->post_structure)) {
+            $this->save_meta_translations($this->post_structure['meta'], $id);
+        }
         return $id;
     }
     private function create_translation_post(){
@@ -58,7 +62,6 @@ class Polylang_SDL_Local {
             );
         $id = wp_insert_post($args);
         pll_set_post_language($id, $this->post_structure['attributes']['target-language']);
-
         $translations = $this->get_post_translations($this->post_structure['id']);
         $translations[$this->post_structure['attributes']['target-language']] = $id;
         pll_save_post_translations($translations);
@@ -78,13 +81,16 @@ class Polylang_SDL_Local {
         $results = array();
         foreach($terms as $id => $name) {
             $langmap = $this->get_term_translations($id);
-            $target_id = $langmap[$this->post_structure['attributes']['target-language']];
+            $target_lang = strtolower($this->post_structure['attributes']['target-language']);
+            $target_id = $langmap[$target_lang];
             //Does term already exist in target language (ie, do we need to register a new term, or just update)
             if($target_id === null || $target_id === false) {
                 $source = get_term( $id, $tax);
                 $target_id = wp_insert_term($name, $tax, array(
                     'slug' => $source->slug . '–' . $this->post_structure['attributes']['target-language']
                     ));
+                var_dump($target_id['term_id']);
+                var_dump($this->post_structure['attributes']['target-language']);
                 pll_set_term_language($target_id['term_id'], $this->post_structure['attributes']['target-language']);
                 $langmap[$this->post_structure['attributes']['target-language']] =  $target_id['term_id'];
                 pll_save_term_translations($langmap);

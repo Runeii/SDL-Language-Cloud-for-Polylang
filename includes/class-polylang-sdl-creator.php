@@ -3,7 +3,7 @@
 class Polylang_SDL_Create_XLIFF {
 
 	private $xliff_storage_path;
-	private $verbose = true;
+	private $verbose = false;
 
 	private $doc;
 	private $attributes = array(
@@ -47,7 +47,7 @@ class Polylang_SDL_Create_XLIFF {
     	$this->build_structure($id);
     	$this->build_XLIFF();
 		$this->doc->save($this->xliff_storage_path . $this->attributes['original'] . '.xliff');
-        return true;
+        return $this->xliff_storage_path . $this->attributes['original'] . '.xliff';
     }
 
     private function build_structure($id){
