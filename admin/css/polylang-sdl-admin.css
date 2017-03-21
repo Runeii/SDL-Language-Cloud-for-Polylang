@@ -6,6 +6,28 @@
  #sdl_settings .wp-filter + form {
  	padding:0 20px;
  }
- .toplevel_page_languagecloud select {
+ .toplevel_page_managedtranslation select {
  	max-width:100%;
  }
+.toplevel_page_managedtranslation-network .column-blog_id {
+	width: 20px;
+}
+.toplevel_page_managedtranslation-network .column-lang {
+    width: 80px;
+}
+.toplevel_page_managedtranslation-network .column-options {
+    width: 300px;
+    position: relative;
+}
+.toplevel_page_managedtranslation-network .column-options button {
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+}
+.toplevel_page_managedtranslation-network .column-src_lang img, .column-target_lang img {
+	margin:0 5px;
+}
+.buttonform {
+	display:inline-block;
+}

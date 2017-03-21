@@ -4,7 +4,17 @@ if( $_POST['action'] == 'sdl_admin_updateoptions' ) {
     $id = $_POST['options_set'];
     $pairs = get_site_option('sdl_settings_projectoptions_pairs');
     update_blog_option($blog_id, 'sdl_projectoptions', $id);
-    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', $pairs[$id]['Source'][0]);
+    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', strtolower($pairs[$id]['Source'][0]));
+} else if( $_POST['action'] == 'sdl_admin_refreshoptions' ) {
+    update_site_option('sdl_settings_projectoptions', null);
+    update_site_option('sdl_settings_projectoptions_pairs', null);
+} else if( $_POST['action'] == 'sdl_admin_togglenetwork' ) {
+    $network_toggle = get_site_option('sdl_settings_networktoggle');
+    if($network_toggle === true || $network_toggle == 1) {
+        update_site_option('sdl_settings_networktoggle', false);
+    } else {
+        update_site_option('sdl_settings_networktoggle', true);
+    }
 }
 
 if( ! class_exists( 'WP_List_Table' ) ) {
@@ -15,18 +25,34 @@ class SDL_Sites_Table extends WP_List_Table
 {
     private $options;
     private $pairs;
+    private $Polylang;
+    private $network_toggle;
 
     public function prepare_items()
     {
+        $this->network_toggle = get_site_option('sdl_settings_networktoggle');
+        echo '<form method="post" action="admin.php?page=managedtranslation" class="buttonform">';
+        echo '<input type="hidden" name="action" value="sdl_admin_togglenetwork" />';
+        if($this->network_toggle === true || $this->network_toggle == 1) { 
+            echo '<button class="button button-secondary">Enable Network-level management</button>';
+        } else {
+            echo '<button class="button button-primary">Disable Network-level management</button>';
+        }
+        echo '</form>';
+        if($this->network_toggle === true || $this->network_toggle == 1) { 
+            die();
+        };
+        echo '<form method="post" action="admin.php?page=managedtranslation" class="buttonform">';
+        echo '<input type="hidden" name="action" value="sdl_admin_refreshoptions" />';
+        echo '<button class="button button-primary">Refresh project options</button>';
+        echo '</form>';
         $this->options = get_site_option('sdl_settings_projectoptions');
         if($this->options === null || $this->options === false) {
             $API = new Polylang_SDL_API();
             $this->options = $API->user_options();
         }
         $this->pairs = get_site_option('sdl_settings_projectoptions_pairs');
-
         if($this->options === null || $this->options === false){
-            echo 'break here';
             die();
         }
         $columns = $this->get_columns();
@@ -55,7 +81,6 @@ class SDL_Sites_Table extends WP_List_Table
         $columns = array(
             'blog_id'     => 'ID',
             'name'       => 'Name',
-            'options_id' => 'Options id',
             'url' => 'Location',
             'lang' => 'Language',
             'src_lang' => 'Source languages',
@@ -79,33 +104,59 @@ class SDL_Sites_Table extends WP_List_Table
     {
         $sites = get_sites();
         $data = array();
-        $network_lang = get_site_option('WPLANG' );
         foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
             $optionsid = get_blog_option($site->blog_id, 'sdl_projectoptions', '0');
             $data[] = array(
                 'blog_id' => $site->blog_id,
                 'name' => $details->blogname,
-                'options_id' => $optionsid,
                 'url' => $details->path,
-                'lang' => get_blog_option($site->blog_id, 'WPLANG', $network_lang),
-                'src_lang' => implode(', ', $this->pairs[$optionsid]['Source']),
-                'target_lang' => implode(', ', $this->pairs[$optionsid]['Target']),
+                'lang' => get_formatted_locale($site->blog_id),
+                'src_lang' => $this->print_flags($this->pairs[$optionsid]['Source']),
+                'target_lang' => $this->print_flags($this->pairs[$optionsid]['Target']),
                 );
         }
         return $data;
     }
+    public function print_flags($langs){
+        $translations = pll_languages_list();
+        if($this->Polylang === null || $this->Polylang === false) {
+            $plugins = get_plugins(); 
+            foreach($plugins as $key => $plugin) {
+                if($plugin['Name'] == 'Polylang') {
+                    $folder = explode('/', $key);
+                    $plugins = plugins_url();
+                    $this->Polylang = $plugins . '/'. $folder[0];
+                }
+            }
+        }
+        $output = '';
+        foreach($langs as $lang) {
+            $stub = explode('-', $lang);
+            if($stub[1] == null) {
+                $output .= '<img src="'. $this->Polylang . '/flags/' . $stub[0] . '.png" />';
+            } else {
+                $output .= '<img src="'. $this->Polylang . '/flags/' . $stub[1] . '.png" />';
+            }
+        }
+        return $output;
+    }
     private function options_set($id){
-        $selector = '<form method="post" action="admin.php?page=languagecloud">';
+        $selector = '<form method="post" action="admin.php?page=managedtranslation">';
         $selector .= '<input type="hidden" name="action" value="sdl_admin_updateoptions" />';
         $selector .= '<input type="hidden" name="blog_id" value="'. $id . '" />';
         $selector .= '<select name="options_set">';
         $selector .= '<option>– Select project options set –</option>';
+        $existingid = get_blog_option($id, 'sdl_projectoptions', '0');
         foreach($this->options as $option){
-            $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
+            if($option['Id'] === $existingid) {
+                $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
+            } else {
+                $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
+            }
         }
         $selector .= '</select>';
-        $selector .= '<button>Update</button>';
+        $selector .= '<button class="button button-primary">Update</button>';
         $selector .= '</form>';
         return $selector;
     }
@@ -117,7 +168,6 @@ class SDL_Sites_Table extends WP_List_Table
             case 'url':
             case 'lang':
             case 'src_lang':
-            case 'options_id':
             case 'target_lang':
                 return $item[ $column_name ];
             case 'options':

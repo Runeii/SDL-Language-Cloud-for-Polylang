@@ -49,7 +49,7 @@ class Polylang_SDL_Admin {
 		add_action('admin_menu', 'sdl_register_menu');
 		add_action('network_admin_menu', 'sdl_register_menu');
 		function sdl_register_menu(){
-			add_menu_page('SDL Language Cloud settings', __( 'Language Cloud','languagecloud' ), 'manage_options', 'languagecloud', 'sdl_create_page', 'dashicons-cloud');
+			add_menu_page('SDL Managed Translation settings', __( 'Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', 'sdl_create_page', 'dashicons-cloud');
 		}
 
 		function sdl_create_page(){
@@ -61,13 +61,13 @@ class Polylang_SDL_Admin {
 			register_setting( 'sdl_settings_form_createproject', 'sdl_settings' );
 			add_settings_section(
 				'sdl_settings_form_createproject_section', 
-				__( 'Your section description', 'languagecloud' ), 
+				__( 'Your section description', 'managedtranslation' ), 
 				'sdl_settings_form_createproject_callback', 
 				'sdl_settings_form_createproject'
 			);
 			add_settings_field( 
 				'sdl_settings_sites_', 
-				__( 'Settings field description', 'languagecloud' ), 
+				__( 'Settings field description', 'managedtranslation' ), 
 				'sdl_settings_form_createproject__render', 
 				'sdl_settings_form_createproject', 
 				'sdl_settings_form_createproject_section' 
@@ -79,20 +79,20 @@ class Polylang_SDL_Admin {
 			register_setting( 'sdl_settings_account_page', 'sdl_settings_account_password' );
 			add_settings_section(
 				'sdl_settings_account_section', 
-				__( 'Language Cloud account details', 'languagecloud' ), 
+				__( 'Managed Translation account details', 'managedtranslation' ), 
 				false, 
 				'sdl_settings_account_page'
 			);
 			add_settings_field( 
 				'sdl_settings_account_username', 
-				__( 'Username', 'languagecloud' ), 
+				__( 'Username', 'managedtranslation' ), 
 				'sdl_settings_account_username_render', 
 				'sdl_settings_account_page', 
 				'sdl_settings_account_section' 
 			);
 			add_settings_field( 
 				'sdl_settings_account_password', 
-				__( 'Password', 'languagecloud' ), 
+				__( 'Password', 'managedtranslation' ), 
 				'sdl_settings_account_password_render', 
 				'sdl_settings_account_page', 
 				'sdl_settings_account_section'
@@ -109,7 +109,7 @@ class Polylang_SDL_Admin {
 			<?php
 		}
 		function sdl_settings_account_section_callback(  ) { 
-			echo __( 'User account login details for the SDL Language Cloud', 'languagecloud' );
+			echo __( 'User account login details for the SDL Managed Translation', 'managedtranslation' );
 		}		 
 		 
 		add_action('network_admin_edit_sdl_settings_update_network_options',  'sdl_settings_update_network_options');
@@ -120,7 +120,7 @@ class Polylang_SDL_Admin {
 
 			foreach ($options as $option) {
 				if (isset($_POST[$option]) && $option === 'sdl_settings_account_password') {
-				    $output = openssl_encrypt($_POST[$option], 'AES-256-CBC', hash('sha256', wp_salt()), 0, substr(hash('sha256', 'languagecloud'), 0, 16));
+				    $output = openssl_encrypt($_POST[$option], 'AES-256-CBC', hash('sha256', wp_salt()), 0, substr(hash('sha256', 'managedtranslation'), 0, 16));
 				    $output = base64_encode($output);
 					update_site_option($option, $output);
 				} else if (isset($_POST[$option])) { 
@@ -130,7 +130,7 @@ class Polylang_SDL_Admin {
 				}
 			}
 
-			wp_redirect(add_query_arg(array('page' => 'languagecloud&tab=account',
+			wp_redirect(add_query_arg(array('page' => 'managedtranslation&tab=account',
 			'updated' => 'true'), network_admin_url('admin.php')));
 			exit;
 		}
@@ -139,7 +139,7 @@ class Polylang_SDL_Admin {
 
 		}
 		function sdl_settings_sites_section_callback(  ) { 
-			echo __( 'This section description', 'languagecloud' );
+			echo __( 'This section description', 'managedtranslation' );
 		}
 	}
 

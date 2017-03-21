@@ -2,7 +2,7 @@
 
 class Polylang_SDL_Local {
 
-	private $verbose = false;
+	private $verbose = true;
     private $post_structure;
     private $syslangs;
     public function __construct() {
@@ -37,8 +37,10 @@ class Polylang_SDL_Local {
     private function update_translation($id){
         if($id === null || $id === false) {
             $id = $this->create_translation_post();
+            $this->verbose('We just created a new post translation. ID:' . $id);
         } else {
             $this->update_translation_post($id);
+            $this->verbose('We just updated the existing translation. ID:' . $id);
         }
         if(array_key_exists('taxonomy', $this->post_structure)) {
             foreach($this->post_structure['taxonomy'] as $tax => $terms) {

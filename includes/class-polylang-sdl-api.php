@@ -5,7 +5,7 @@ class Polylang_SDL_API {
 	private $authtoken;
 	private $username;
 	private $password;
-	private $verbose = false;
+	private $verbose = true;
 
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');
@@ -22,9 +22,12 @@ class Polylang_SDL_API {
 			$this->connect_authtoken();
 		}
     }
-    private function verbose($msg) {
+    public function verbose($msg, $array = null) {
     	if($this->verbose === true) {
     		echo '<b>Console: </b>'. $msg .'<br />';
+	    	if($array != null) {
+	    		var_dump($array);
+	    	}
     	}
     }
 	/*
@@ -218,13 +221,11 @@ class Polylang_SDL_API {
 					'Target' => array()
 					);
 				foreach($option['LanguagePairs'] as $pair) {
-					$code = explode('-', $pair['Source']['Code']);
-					if(!in_array($code[0], $options[$option['Id']]['Source']) ) {
-						$options[$option['Id']]['Source'][] = $code[0];
+					if(!in_array($pair['Source']['CultureCode'], $options[$option['Id']]['Source']) ) {
+						$options[$option['Id']]['Source'][] = $pair['Source']['CultureCode'];
 					}
-					$code = explode('-', $pair['Target']['Code']);
-					if(!in_array($code[0], $options[$option['Id']]['Target'])){
-						$options[$option['Id']]['Target'][] = $code[0];
+					if(!in_array($pair['Target']['CultureCode'], $options[$option['Id']]['Target'])){
+						$options[$option['Id']]['Target'][] = $pair['Target']['CultureCode'];
 					}
 				}
 			}
@@ -250,7 +251,7 @@ class Polylang_SDL_API {
 	}
 	public function project_getStatus($id) {
 		$response = $this->project_getStatusCode($id);
-		return $this->statusDetails($response, 'Name');
+		return $this->system_statusDetails($response, 'Name');
 	}
 	public function project_updateStatus($id, $status) {
 		if($status == 'approve') {
@@ -278,7 +279,14 @@ class Polylang_SDL_API {
 		) */
 		return $this->callJSON('/projects', $args);
 	}
-	public function statusDetails($code, $value = null) {
+
+	/*
+	// System functions
+	*/
+	public function system_languages() {
+		return $this->call('GET', '/resources/uilanguages');
+	}
+	public function system_statusDetails($code, $value = null) {
 		$codes = array(
 			array(
 				'Name' => 'Preparing',
@@ -390,7 +398,7 @@ class Polylang_SDL_API {
 
 	    $encrypt_method = "AES-256-CBC";
 	    $secret_key = wp_salt();
-	    $secret_iv = 'languagecloud';
+	    $secret_iv = 'managedtranslation';
 	    $key = hash('sha256', $secret_key);
 	    
 	    // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning

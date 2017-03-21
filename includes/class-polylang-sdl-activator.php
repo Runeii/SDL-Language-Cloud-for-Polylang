@@ -30,9 +30,6 @@ class Polylang_SDL_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
-		if (! wp_next_scheduled ( 'poll_projects' )) {
-			wp_schedule_event(time(), 'hourly', 'poll_projects');
-	    }
-	}
 
+	}
 }

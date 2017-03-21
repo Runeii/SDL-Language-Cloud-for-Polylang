@@ -8,7 +8,7 @@ if( isset( $_GET[ 'tab' ] ) ) {
 }
 ?>  
 <div id="sdl_settings" class="wrap">
-    <h2>SDL Language Cloud for Polylang</h2>
+    <h2>SDL Managed Translation for Polylang</h2>
     <?php settings_errors(); ?> 
     <?php
         $API = new Polylang_SDL_API(true);
@@ -18,21 +18,21 @@ if( isset( $_GET[ 'tab' ] ) ) {
                 <ul class="filter-links">
                 <?php if(is_network_admin()) { ?>
                     <li>
-                        <a href="?page=languagecloud&tab=sites" class="<?php echo $active_tab == 'sites' ? 'current' : ''; ?>">Network setup</a>
+                        <a href="?page=managedtranslation&tab=sites" class="<?php echo $active_tab == 'sites' ? 'current' : ''; ?>">Network setup</a>
                     </li>
                 <?php } ?>
                     <li>
-                        <a href="?page=languagecloud&tab=dashboard" class="<?php echo $active_tab == 'dashboard' ? 'current' : ''; ?>">Dashboard</a>  
+                        <a href="?page=managedtranslation&tab=dashboard" class="<?php echo $active_tab == 'dashboard' ? 'current' : ''; ?>">Dashboard</a>  
                     </li>
-                <?php if(is_network_admin()) { ?>
+                <?php if(is_network_admin() || !is_multisite()) { ?>
                     <li>
-                        <a href="?page=languagecloud&tab=account" class="<?php echo $active_tab == 'account' ? 'current' : ''; ?>">Account Details</a>  
+                        <a href="?page=managedtranslation&tab=account" class="<?php echo $active_tab == 'account' ? 'current' : ''; ?>">Account Details</a>  
                     </li>
                 <?php } ?>
                 </ul>
             </div>
                 <?php 
-                if( $active_tab == 'sites' ) {  
+                if( $active_tab == 'sites' ) {
                     if( ! class_exists( 'SDL_Sites_Table' ) ) {
                         require_once('class-polylang-sdl-admin–network–sites.php' );
                     }
@@ -43,12 +43,12 @@ if( isset( $_GET[ 'tab' ] ) ) {
                     echo "<form action='options.php' method='post'>";
                     echo '<h2>Our statistics, reports and overview will go here.</h2>';
                     echo '</form>';
-                } else if( $active_tab == 'account' ) {
+                } else if( $active_tab == 'account' && (is_network_admin() || !is_multisite()) ) {
                     echo "<form action='edit.php?action=sdl_settings_update_network_options' method='post'>";
                         echo '<h2>Account details</h2>';
                         settings_fields( 'sdl_settings_account_page' );
                         do_settings_sections( 'sdl_settings_account_page' );
-                        submit_button('Login to Language Cloud');
+                        submit_button('Login to Managed Translation');
                     echo '</form>';
                 }
                 ?>
@@ -57,26 +57,18 @@ if( isset( $_GET[ 'tab' ] ) ) {
             <div class="wp-filter">
                 <ul class="filter-links">
                     <li>
-                        <a href="?page=languagecloud&tab=account" class="current">Account Details</a>
+                        <a href="?page=managedtranslation&tab=account" class="current">Account Details</a>
                     </li>
                 </ul>  
             </div>
-            <?php
-            if(is_network_admin() && $active_tab == 'account') {
+            <?php if(is_network_admin() || !is_multisite()) {
                 echo "<form action='edit.php?action=sdl_settings_update_network_options' method='post'>";
                     settings_fields( 'sdl_settings_account_page' );
                     do_settings_sections( 'sdl_settings_account_page' ); 
-                    submit_button('Login to Language Cloud');
+                    submit_button('Login to Managed Translation');
                 echo "</form>";
-            } else if(is_network_admin()) {
-                echo "
-                <form>
-                    <h2>Setup not completed</h2>
-                    <p>Please visit the Account Details tab to complete setup</p>
-                </form>
-                ";
             } else { 
-                $url = network_admin_url('admin.php?page=languagecloud&tab=account');
+                $url = network_admin_url('admin.php?page=managedtranslation&tab=account');
                 echo "
                 <form>
                     <h2>Setup not completed</h2>
