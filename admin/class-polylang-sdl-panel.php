@@ -3,7 +3,7 @@
 class Polylang_SDL_Admin_Panel {
     private $current_tab;
     private $tabs;
-    private $verbose = true;
+    private $verbose = false;
     private $API;
 
     public function __construct(){
@@ -107,7 +107,7 @@ class Polylang_SDL_Admin_Panel {
             case false:
                 $url = network_admin_url('admin.php?page=managedtranslation&tab=account');
                 $output .= '<form>';
-                $this->print_error_code();
+                $this->print_error();
                 $output .= '</form>';
                 print $output;
                 break;
@@ -115,7 +115,7 @@ class Polylang_SDL_Admin_Panel {
                 break;
         }
     }
-    private function print_error_code(){
+    private function print_error(){
         switch ($this->error_code) {
             case 401:
                 $output .= '<h2>Unable to connect to SDL Managed Translation</h2>';
@@ -123,7 +123,7 @@ class Polylang_SDL_Admin_Panel {
                 break;
             case 403:
                 $output .= '<h2>Permission denied</h2>';
-                $output .= '<p>SDL Managed Translation settings are being managed by network administrator</p>';
+                $output .= '<p>SDL Managed Translation settings are being managed by network administrator. Please contact them for support.</p>';
                 break;
         }
         print $output;

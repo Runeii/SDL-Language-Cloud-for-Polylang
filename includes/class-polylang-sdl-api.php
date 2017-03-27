@@ -5,7 +5,7 @@ class Polylang_SDL_API {
 	private $authtoken;
 	private $username;
 	private $password;
-	private $verbose = true;
+	private $verbose = false;
 
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');

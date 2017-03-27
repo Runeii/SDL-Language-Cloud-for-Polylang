@@ -15,6 +15,7 @@ class Polylang_SDL_Admin_Posts {
 	private $version;
 	private $option_name;
 	private $args;
+	private $api;
 
 	public function __construct() {
 		if(is_admin()) {
@@ -29,22 +30,24 @@ class Polylang_SDL_Admin_Posts {
 	}
 
 	public function register_dropdowns($bulk_actions){
-		//sdl_poll_projects();
 		  global $post_type;
 		  $language_set = get_site_option('sdl_settings_projectoptions_pairs')[$this->args['ProjectOptionsID']];
 		  if(pll_is_translated_post_type($post_type)) {
 		  	$string = '';
 		  	$bulk_actions['sdl_translate_full'] = __('Create translation project', 'managedtranslation');
+		  	$Polylang_languages = pll_languages_list();
 		  	foreach($language_set['Target'] as $language) {
-		  		$bulk_actions['sdl_translate_' . $language] = __('Quick translate into ' . strtoupper($language), 'managedtranslation');
-		  		$string .= $language . '_';
+		  		$short_name = explode('-', $language)[0];
+		  		if(in_array($short_name, $Polylang_languages)) {
+			  		$bulk_actions['sdl_translate_' . $language] = __('Quick translate into ' . strtoupper($short_name), 'managedtranslation');
+			  		$string .= $language . '_';	
+		  		}
 		  	}
 		  }
 		  return $bulk_actions;
 	}
 
 	public function handle_dropdowns( $redirect_to, $doaction, $post_ids ) {
-		var_dump($post_ids);
 		$string = strpos($doaction, 'sdl_translate_');
 		if ( $string !== 0) {
 			return $redirect_to;
@@ -82,7 +85,6 @@ class Polylang_SDL_Admin_Posts {
 			$this->args['Name'] = get_the_title($id[0]);
 		}
 		$this->args['Files'] = $this->posts_to_file($id);
-		var_dump(JSON_encode($args));
 		/*$response = $api->project_create($args);
 		if(is_array($response)) {
 			$inprogress = get_option('sdl_translations_inprogress');
@@ -95,6 +97,8 @@ class Polylang_SDL_Admin_Posts {
 		return $response;*/
 	}
 	public function create_project($id) {
+		$this->api = new Polylang_SDL_API;
+
 		if(sizeof($id) > 1) {
 			$this->args['Name'] = 'Bulk translation – ' . date('H:i jS M');
 		} else {
@@ -102,8 +106,8 @@ class Polylang_SDL_Admin_Posts {
 		}
 		$this->args['Files'] = $this->posts_to_file($id);
 		unset($this->args['Targets']);
-		var_dump($this->args);
-		/*$response = $api->project_create($args);
+
+		$response = $this->api->project_create($this->args);
 		if(is_array($response)) {
 			$inprogress = get_option('sdl_translations_inprogress');
 			if($inprogress == null) {
@@ -111,14 +115,13 @@ class Polylang_SDL_Admin_Posts {
 			}
 			$inprogress[] = $response['ProjectId'];
 			update_option('sdl_translations_inprogress', $inprogress);
-			return array('key' => 'translation_success', 'value' => count( $post_ids ));
+			return array('key' => 'translation_success', 'value' => count( $id ));
 		} else {
 			return array('key' => 'translation_error', 'value' => 'API error ' . $response);
-		}*/
+		}
 	}
 	public function posts_to_file($id){
 		$convertor = new Polylang_SDL_Create_XLIFF;
-		$api = new Polylang_SDL_API;
 		if(sizeof($id) > 1) {
 			$description = '';
 			$file_upload = array();
@@ -126,7 +129,7 @@ class Polylang_SDL_Admin_Posts {
 				$description .= get_the_title($post) . ', ';
 				$xliff = $convertor->output($post, $this->src_lang, $target);
 				$file_upload[] = array(
-									'fileId' => $api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
+									'fileId' => $this->api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
 									'targets' => array($this->args['Targets'])
 								);
 			}
@@ -134,7 +137,7 @@ class Polylang_SDL_Admin_Posts {
 			$xliff = $convertor->output($id[0], $this->src_lang, $this->args['Targets']);
 			$file_upload = array(
 				array(
-				'fileId' => $api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
+				'fileId' => $this->api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
 				'targets' => array($this->args['Targets'])
 				)
 			);
