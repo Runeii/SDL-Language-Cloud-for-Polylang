@@ -46,34 +46,24 @@ class Polylang_SDL_Admin {
 	}
 
 	public function register_interface(){
-		add_action('admin_menu', 'sdl_register_menu');
-		add_action('network_admin_menu', 'sdl_register_menu');
-		function sdl_register_menu(){
-			add_menu_page('SDL Managed Translation settings', __( 'Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', 'sdl_create_page', 'dashicons-cloud');
-		}
+		add_action('admin_menu', array($this, 'sdl_register_menu'));
+		add_action('network_admin_menu', array($this, 'sdl_register_menu'));
+		add_action( 'admin_init', array($this, 'sdl_settings_init') );
+	}
+	
+	public function sdl_register_menu(){
+		add_menu_page('SDL Managed Translation settings', __( 'Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
+	}
 
-		function sdl_create_page(){
-    		include('class-polylang-sdl-panel.php');
-		}
+	public function sdl_create_page(){
+    	include('class-polylang-sdl-panel.php');
+   		new Polylang_SDL_Admin_Panel;
+	}
 
-		add_action( 'admin_init', 'sdl_settings_init' );
-		function sdl_settings_init() {
-			register_setting( 'sdl_settings_form_createproject', 'sdl_settings' );
-			add_settings_section(
-				'sdl_settings_form_createproject_section', 
-				__( 'Your section description', 'managedtranslation' ), 
-				'sdl_settings_form_createproject_callback', 
-				'sdl_settings_form_createproject'
-			);
-			add_settings_field( 
-				'sdl_settings_sites_', 
-				__( 'Settings field description', 'managedtranslation' ), 
-				'sdl_settings_form_createproject__render', 
-				'sdl_settings_form_createproject', 
-				'sdl_settings_form_createproject_section' 
-			);
-		}
+	public function sdl_settings_init() {
+
 		add_filter('network_admin_menu', 'sdl_settings_network_admin_menu');
+		add_action('network_admin_edit_sdl_settings_update_network_options',  'sdl_settings_update_network_options');
 		function sdl_settings_network_admin_menu() {
 			register_setting( 'sdl_settings_account_page', 'sdl_settings_account_username' );
 			register_setting( 'sdl_settings_account_page', 'sdl_settings_account_password' );
@@ -110,9 +100,7 @@ class Polylang_SDL_Admin {
 		}
 		function sdl_settings_account_section_callback(  ) { 
 			echo __( 'User account login details for the SDL Managed Translation', 'managedtranslation' );
-		}		 
-		 
-		add_action('network_admin_edit_sdl_settings_update_network_options',  'sdl_settings_update_network_options');
+		} 
 		function sdl_settings_update_network_options() {
 			check_admin_referer('sdl_settings_account_page-options');
 			global $new_whitelist_options;
@@ -134,7 +122,6 @@ class Polylang_SDL_Admin {
 			'updated' => 'true'), network_admin_url('admin.php')));
 			exit;
 		}
-
 		function sdl_settings_text_sites__render(  ) { 
 
 		}
@@ -142,7 +129,6 @@ class Polylang_SDL_Admin {
 			echo __( 'This section description', 'managedtranslation' );
 		}
 	}
-
 }
 
 ?>
