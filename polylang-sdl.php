@@ -41,6 +41,7 @@ function sdl_poll_projects(){
 				if($file) {
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
 					$posts = $unpack->convert($project);
+					$api->verbose('Structure: ', array($posts));
 					if(is_array($posts)) {
 						$convertor = new Polylang_SDL_Local;
 						foreach($posts as $post) {

@@ -16,7 +16,9 @@ class Polylang_SDL_Local {
     }
     public function save_post_translation($structure){
         $this->post_structure = $structure;
-        $existing_id = pll_get_post($structure['id'], $structure['attributes']['target-language']);
+        $this->post_structure['attributes']['target-language'] = explode('-', $this->post_structure['attributes']['target-language'])[0];
+
+        $existing_id = pll_get_post($structure['id'], $this->post_structure['attributes']['target-language']);
         return $this->update_translation($existing_id);
     }
     public function get_post_translations($post_id){
@@ -92,8 +94,6 @@ class Polylang_SDL_Local {
                 $target_id = wp_insert_term($name, $tax, array(
                     'slug' => $source->slug . '–' . $this->post_structure['attributes']['target-language']
                     ));
-                var_dump($target_id['term_id']);
-                var_dump($this->post_structure['attributes']['target-language']);
                 pll_set_term_language($target_id['term_id'], $this->post_structure['attributes']['target-language']);
                 $langmap[$this->post_structure['attributes']['target-language']] =  $target_id['term_id'];
                 pll_save_term_translations($langmap);
