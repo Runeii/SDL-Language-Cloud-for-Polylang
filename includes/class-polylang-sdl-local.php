@@ -56,8 +56,8 @@ class Polylang_SDL_Local {
     }
     private function create_translation_post(){
         $args = array(
-            'post_title' => $this->post_structure['title'],
-            'post_content' => $this->post_structure['body'],
+            'post_title' => html_entity_decode($this->post_structure['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'post_content' => html_entity_decode($this->post_structure['body'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'post_type' => get_post_type($this->post_structure['id']),
             'post_status' => get_post_status($this->post_structure['id']),
             'post_author' => get_the_author_meta($this->post_structure['id']),
@@ -73,8 +73,8 @@ class Polylang_SDL_Local {
     private function update_translation_post($id){
         $args = array(
             'ID' => $id,
-            'post_title' => $this->post_structure['title'],
-            'post_content' => $this->post_structure['body']
+            'post_title' => html_entity_decode($this->post_structure['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'post_content' => html_entity_decode($this->post_structure['body'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             );
         $id = wp_update_post($args);
         return $id;
@@ -82,6 +82,7 @@ class Polylang_SDL_Local {
     private function save_taxonomy_translations($tax, $terms){
         $results = array();
         foreach($terms as $id => $name) {
+            $name = html_entity_decode($name, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $langmap = $this->get_term_translations($id);
             $target_lang = strtolower($this->post_structure['attributes']['target-language']);
             $target_id = $langmap[$target_lang];
@@ -114,7 +115,11 @@ class Polylang_SDL_Local {
     }
     private function save_meta_translations($meta, $id){
         foreach($meta as $name => $value) {
-            update_post_meta($id, $name, $value);
+            update_post_meta(
+                $id, 
+                html_entity_decode($name, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8')
+            );
         }
     }
 }
