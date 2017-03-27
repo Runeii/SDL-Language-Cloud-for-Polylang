@@ -54,7 +54,7 @@ class Polylang_SDL_Admin_Posts {
 		}
 		$suffix = preg_replace('/^sdl_translate_/', '', $doaction);
 		if($suffix === 'full') {
-
+			$response = $this->create_project_form($post_ids);
 		} else {
 			$this->args['Targets'] = $suffix;
 			$response = $this->create_project($post_ids);
@@ -78,14 +78,21 @@ class Polylang_SDL_Admin_Posts {
 	    	'</div>' );
 	  }
 	}
-	public function create_project_form($id) {
-		if(sizeof($id) > 1) {
-			$this->args['Name'] = 'Bulk translation – ' . date('H:i jS M');
-		} else {
-			$this->args['Name'] = get_the_title($id[0]);
-		}
+	public function create_project_form($post_ids) {
+		$sanitised_ids = implode(',', $post_ids);
+		wp_redirect(
+			add_query_arg(
+				array(
+					'page' => 'managedtranslation&tab=create_project',
+					'override' => '1',
+					'posts' => $sanitised_ids), 
+				network_admin_url('admin.php')
+			)
+		);
+		exit;
+		/*
 		$this->args['Files'] = $this->posts_to_file($id);
-		/*$response = $api->project_create($args);
+		$response = $api->project_create($args);
 		if(is_array($response)) {
 			$inprogress = get_option('sdl_translations_inprogress');
 			if($inprogress == null) {

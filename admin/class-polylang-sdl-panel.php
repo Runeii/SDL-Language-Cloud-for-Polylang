@@ -8,9 +8,16 @@ class Polylang_SDL_Admin_Panel {
 
     public function __construct(){
         $this->API = new Polylang_SDL_API(true);
-        $this->register_tabs();
-        $this->set_default();
-
+        if(isset($_GET['override'])) {
+            //Add tab to array, tidy up user facing display name
+            $this->tabs = array(
+                $_GET['tab'] => ucfirst(str_replace('_', ' ', $_GET['tab']))
+            );
+            $this->current_tab = $_GET['tab'];
+        } else {
+            $this->register_tabs();   
+            $this->set_default();
+        }
         $this->display_page();
     }
     public function verbose($msg, $array = null) {
@@ -60,22 +67,22 @@ class Polylang_SDL_Admin_Panel {
         }
     }
     public function display_page(){
-        print '<div id="sdl_settings" class="wrap">';
-        print '<h2>SDL Managed Translation for Polylang</h2>';
+        echo '<div id="sdl_settings" class="wrap">';
+        echo '<h2>SDL Managed Translation for Polylang</h2>';
         settings_errors();
         if($this->current_tab != false) {
-            print '<div class="wp-filter">';
-            print '<ul class="filter-links">';
+            echo '<div class="wp-filter">';
+            echo '<ul class="filter-links">';
             foreach($this->tabs as $name => $display) {
                 $this->output_menu($name, $display);
             }
-            print '</ul>';
-            print '</div>';
+            echo '</ul>';
+            echo '</div>';
             $this->output_panel();
         } else {
-            print $this->output_panel();
+            echo $this->output_panel();
         }
-        print '</div>';
+        echo '</div>';
         return $output;
     }
     private function output_menu($name, $display){
@@ -84,7 +91,7 @@ class Polylang_SDL_Admin_Panel {
             $output .= 'class="current"';
         }
         $output .= '>' . $display . '</a></li>';
-        print $output;
+        echo $output;
     }
     private function output_panel(){
         switch($this->current_tab) {
@@ -109,7 +116,10 @@ class Polylang_SDL_Admin_Panel {
                 $output .= '<form>';
                 $this->print_error();
                 $output .= '</form>';
-                print $output;
+                echo $output;
+                break;
+            case 'create_project':
+                $this->build_create_project_panel();
                 break;
             default:
                 break;
@@ -126,8 +136,46 @@ class Polylang_SDL_Admin_Panel {
                 $output .= '<p>SDL Managed Translation settings are being managed by network administrator. Please contact them for support.</p>';
                 break;
         }
-        print $output;
+        echo $output;
     }
-
+        /* $args should be an array(
+            'ProjectOptionsID' => 'ID of the options set for this project !required',
+            'SrcLang' => 'Source language !required', <!---- we should check this
+            'TmSequenceId' => TM sequence identifier,
+            'Vendors' => Sets the vendor ID for this project,
+            'Due date' => When the project is due
+        ) */
+    public function build_create_project_panel(){
+        $ids = explode(',', $_GET['posts']);
+        if(sizeof($ids) > 1) {
+            $name = 'Bulk translation – ' . date('H:i jS M');
+            $description = 'A group of posts, including:&#013; &#010;';
+            foreach($ids as $id) {
+                $description .= '- ' . get_the_title($id) . '&#013;';
+            }
+        } else {
+            $name = get_the_title($ids[0]);
+            $description = '';
+        }
+        $date = '31.08.1989';
+        var_dump($description);
+        echo "<form action='edit.php?action=create_project' method='post'>";
+            echo '<table class="form-table">';
+            echo '<tr>';
+                echo '<th><label for="name">Project name</label></th>';
+                    echo '<td><input name="name" type="text" class="regular-text" value="'. $name .'"></input></td>';
+            echo '<tr>';
+            echo '</tr>';
+                echo '<th><label for="description">Project description</label></th>';
+                    echo '<td><textarea name="description" type="text" cols="45" row="5">'. $description .'</textarea></td>';
+            echo '<tr>';
+            echo '</tr>';
+                echo '<th><label for="date">Due date</label></th>';
+                    echo '<td><input name="Due date" type="date" inputmode="numeric" value="'. $date .'"></input></td>';
+                echo '<submit>Create project</submit>';
+            echo '</tr>';
+            echo '</table>';
+        echo '</form>';
+    }
 }
 ?> 
