@@ -2,7 +2,7 @@
 
 class Polylang_SDL_Local {
 
-	private $verbose = true;
+	private $verbose = false;
     private $post_structure;
     private $syslangs;
     public function __construct() {
@@ -14,11 +14,13 @@ class Polylang_SDL_Local {
     		echo '<b>Console: </b>'. $msg .'<br />';
     	}
     }
+
     public function save_post_translation($structure){
         $this->post_structure = $structure;
         $this->post_structure['attributes']['target-language'] = explode('-', $this->post_structure['attributes']['target-language'])[0];
-
-        $existing_id = pll_get_post($structure['id'], $this->post_structure['attributes']['target-language']);
+        
+        //Check if a translation in this language is already attached to post - ie, if we're updating an existing translation
+        $existing_id = pll_get_post($this->post_structure['original_id'], $this->post_structure['attributes']['target-language']);
         return $this->update_translation($existing_id);
     }
     public function get_post_translations($post_id){
@@ -60,13 +62,13 @@ class Polylang_SDL_Local {
         $args = array(
             'post_title' => html_entity_decode($this->post_structure['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'post_content' => html_entity_decode($this->post_structure['body'], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            'post_type' => get_post_type($this->post_structure['id']),
-            'post_status' => get_post_status($this->post_structure['id']),
-            'post_author' => get_the_author_meta($this->post_structure['id']),
+            'post_type' => get_post_type($this->post_structure['original_id']),
+            'post_status' => get_post_status($this->post_structure['original_id']),
+            'post_author' => get_the_author_meta($this->post_structure['original_id']),
             );
         $id = wp_insert_post($args);
         pll_set_post_language($id, $this->post_structure['attributes']['target-language']);
-        $translations = $this->get_post_translations($this->post_structure['id']);
+        $translations = $this->get_post_translations($this->post_structure['original_id']);
         $translations[$this->post_structure['attributes']['target-language']] = $id;
         pll_save_post_translations($translations);
 

@@ -1,22 +1,4 @@
 <?php
-if( $_POST['action'] == 'sdl_admin_updateoptions' ) {
-    $blog_id = intval( $_POST['blog_id'] );
-    $id = $_POST['options_set'];
-    $pairs = get_site_option('sdl_settings_projectoptions_pairs');
-    update_blog_option($blog_id, 'sdl_projectoptions', $id);
-    update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', strtolower($pairs[$id]['Source'][0]));
-} else if( $_POST['action'] == 'sdl_admin_refreshoptions' ) {
-    update_site_option('sdl_settings_projectoptions', null);
-    update_site_option('sdl_settings_projectoptions_pairs', null);
-} else if( $_POST['action'] == 'sdl_admin_togglenetwork' ) {
-    $network_toggle = get_site_option('sdl_settings_networktoggle');
-    if($network_toggle === true || $network_toggle == 1) {
-        update_site_option('sdl_settings_networktoggle', false);
-    } else {
-        update_site_option('sdl_settings_networktoggle', true);
-    }
-}
-
 if( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 }

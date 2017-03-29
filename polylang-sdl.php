@@ -2,12 +2,12 @@
 
 /**
  * @wordpress-plugin
- * Plugin Name:       SDL for Polylang
+ * Plugin Name:       SDL Managed Translation
  * Plugin URI:        http://languagecloud.sdl.com/
  * Description:       SDL Managed Translation integration for Poylang, for translating WordPress site content.
  * Version:           1.0.0
  * Author:            SDL
- * Text Domain:		  languagecloud
+ * Text Domain:		  managedtranslation
  */
 
 // If this file is called directly, abort.
@@ -30,7 +30,7 @@ add_action('poll_projects', 'sdl_poll_projects');
 function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
 	$api = new Polylang_SDL_API;
-	if(is_array($inprogress)) {
+	if(is_array($inprogress) && sizeof($inprogress) > 0) {
 		$api->verbose('Currently in progress: ', $inprogress);
 		foreach($inprogress as $project) {
 			$status = $api->project_getStatusCode($project);
@@ -41,11 +41,12 @@ function sdl_poll_projects(){
 				if($file) {
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
 					$posts = $unpack->convert($project);
-					$api->verbose('Structure: ', array($posts));
+					$api->verbose('Structure: ', $posts);
 					if(is_array($posts)) {
 						$convertor = new Polylang_SDL_Local;
 						foreach($posts as $post) {
 							$saved = $convertor->save_post_translation($post);
+							$api->verbose('Successfully saved translation ID: ', $saved);
 						}
 						//An update could have happened while saving, so let's refresh the array
 						$latest = get_option('sdl_translations_inprogress');
@@ -53,7 +54,7 @@ function sdl_poll_projects(){
 						$api->verbose('Remaining in progress: ', array_diff($latest, [$project]));
 						update_option('sdl_translations_inprogress', array_diff($latest, [$project]));
 						$api->project_updateStatus($project, 'complete');
-					}
+					} 
 				}
 			}
 		}

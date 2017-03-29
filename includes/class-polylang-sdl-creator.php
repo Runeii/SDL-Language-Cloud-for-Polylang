@@ -17,10 +17,6 @@ class Polylang_SDL_Create_XLIFF {
 	private $DOMCanvas;
 
     public function __construct() {
-    	$this->doc = new DOMDocument('1.0', get_bloginfo('charset'));
-        $this->doc->preserveWhiteSpace = false;
-        $this->doc->formatOutput = true;
-        $this->doc->xmlStandalone = false;
         $files = new Polylang_SDL_Files;
         $this->xliff_storage_path = $files->getFolder('converted');
     }
@@ -35,7 +31,27 @@ class Polylang_SDL_Create_XLIFF {
         return $unique;
     }
 
+    public function package_post($id, $args){
+        $api = new Polylang_SDL_API;
+        $file_upload = array();
+        foreach($args['Targets'] as $target_lang) {
+            $target_lang = strtolower($target_lang);
+            foreach($id as $post) {
+                $xliff = $this->output($post, $args['SrcLang'], $target_lang);
+                $file_upload[] = array(
+                                    'fileId' => $api->file_upload($xliff, $args['ProjectOptionsID'])[0]['FileId'],
+                                    'targets' => array($target_lang)
+                                );
+            }    
+        }
+        return $file_upload;
+    }
     public function output($id, $src, $target){
+        $this->doc = new DOMDocument('1.0', get_bloginfo('charset'));
+        $this->doc->preserveWhiteSpace = false;
+        $this->doc->formatOutput = true;
+        $this->doc->xmlStandalone = false;
+
     	$attributes = array(
     		'target-language' => $target,
             'original' => $this->create_unique($id),
@@ -46,8 +62,8 @@ class Polylang_SDL_Create_XLIFF {
 
     	$this->build_structure($id);
     	$this->build_XLIFF();
-		$this->doc->save($this->xliff_storage_path . $this->attributes['original'] . '.xliff');
-        return $this->xliff_storage_path . $this->attributes['original'] . '.xliff';
+		$this->doc->save($this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff');
+        return $this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff';
     }
 
     private function build_structure($id){

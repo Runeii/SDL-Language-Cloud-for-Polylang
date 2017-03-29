@@ -56,7 +56,7 @@ class Polylang_SDL_Admin_Posts {
 		if($suffix === 'full') {
 			$response = $this->create_project_form($post_ids);
 		} else {
-			$this->args['Targets'] = $suffix;
+			$this->args['Targets'] = array($suffix);
 			$response = $this->create_project($post_ids);
 		}
 		$redirect_to = add_query_arg( $reponse['key'], $response['value'], $redirect_to );
@@ -86,22 +86,10 @@ class Polylang_SDL_Admin_Posts {
 					'page' => 'managedtranslation&tab=create_project',
 					'override' => '1',
 					'posts' => $sanitised_ids), 
-				network_admin_url('admin.php')
+				admin_url('admin.php')
 			)
 		);
 		exit;
-		/*
-		$this->args['Files'] = $this->posts_to_file($id);
-		$response = $api->project_create($args);
-		if(is_array($response)) {
-			$inprogress = get_option('sdl_translations_inprogress');
-			if($inprogress == null) {
-				$inprogress = array();
-			}
-			$inprogress[] = $response['ProjectId'];
-			update_option('sdl_translations_inprogress', $inprogress);
-		}
-		return $response;*/
 	}
 	public function create_project($id) {
 		$this->api = new Polylang_SDL_API;
@@ -111,7 +99,8 @@ class Polylang_SDL_Admin_Posts {
 		} else {
 			$this->args['Name'] = get_the_title($id[0]);
 		}
-		$this->args['Files'] = $this->posts_to_file($id);
+		$convertor = new Polylang_SDL_Create_XLIFF;
+		$this->args['Files'] = $convertor->package_post($id, $this->args);
 		unset($this->args['Targets']);
 
 		$response = $this->api->project_create($this->args);
@@ -126,30 +115,6 @@ class Polylang_SDL_Admin_Posts {
 		} else {
 			return array('key' => 'translation_error', 'value' => 'API error ' . $response);
 		}
-	}
-	public function posts_to_file($id){
-		$convertor = new Polylang_SDL_Create_XLIFF;
-		if(sizeof($id) > 1) {
-			$description = '';
-			$file_upload = array();
-			foreach($id as $post) {
-				$description .= get_the_title($post) . ', ';
-				$xliff = $convertor->output($post, $this->src_lang, $target);
-				$file_upload[] = array(
-									'fileId' => $this->api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
-									'targets' => array($this->args['Targets'])
-								);
-			}
-		} else {
-			$xliff = $convertor->output($id[0], $this->src_lang, $this->args['Targets']);
-			$file_upload = array(
-				array(
-				'fileId' => $this->api->file_upload($xliff, $this->args['ProjectOptionsID'])[0]['FileId'],
-				'targets' => array($this->args['Targets'])
-				)
-			);
-		}
-		return $file_upload;
 	}
 }
 

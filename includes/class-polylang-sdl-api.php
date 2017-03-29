@@ -5,7 +5,7 @@ class Polylang_SDL_API {
 	private $authtoken;
 	private $username;
 	private $password;
-	private $verbose = true;
+	private $verbose = false;
 
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');
@@ -96,7 +96,7 @@ class Polylang_SDL_API {
 		if($httpcode == '200') { 
 			return $response;
 		} else {
-			$this->verbose('JSON call failed. HTTP code: '. $httpcode . '. ' . $response);
+			$this->verbose('JSON call failed. HTTP code: '. $httpcode . '. ', $response);
 			return $httpcode;
 		}
 	}
@@ -105,6 +105,7 @@ class Polylang_SDL_API {
 	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
 	    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
 	    $curl = curl_init($streamurl);
+		$this->verbose('Stream URL: '. $streamurl);
 	    $output = $where . $name . '.zip';
     	if(file_exists($output)) {
 			$this->verbose("File exists, deleting:". $output);
@@ -197,7 +198,7 @@ class Polylang_SDL_API {
 			$this->connect_saveAuthToken($response);
 			return true;
 		} else {
-			return $response;
+			return false;
 		}
 	}
 
@@ -346,7 +347,7 @@ class Polylang_SDL_API {
 		set_time_limit(0);
 	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1/files/' . $optionsid;
 		if (function_exists('curl_file_create')) {
-		  $cFile = curl_file_create($file);
+		  $cFile = curl_file_create($file, 'application/xliff+xml' , basename($file));
 		} else {
 		  $cFile = '@' . realpath($file);
 		}

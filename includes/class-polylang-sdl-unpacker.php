@@ -16,15 +16,8 @@ class Polylang_SDL_Unpack_XLIFF {
     		echo '<b>Console: </b>'. $msg .'<br />';
     	}
     }
-    private function create_unique(){
-        $type = get_post_type($this->structure['id']);
-        $unique = $type . '_' . $this->structure['id'];
-        return $unique;
-    }
     public function convert($id){
         $this->structure['project_id'] = $id;
-
-        $filename = $this->create_unique() . '.xliff';
         $files = scandir($this->xliff_storage_path . $id);
         unset($files[0]);
         unset($files[1]);
@@ -41,7 +34,7 @@ class Polylang_SDL_Unpack_XLIFF {
     	$file = $this->doc->getElementsByTagName('file');
     	$this->structure['attributes']['source-language'] = strtolower($file[0]->getAttribute('source-language'));
     	$this->structure['attributes']['target-language'] = strtolower($file[0]->getAttribute('target-language'));
-        $this->structure['id'] = explode('_', $file[0]->getAttribute('original'))[1];
+        $this->structure['original_id'] = explode('_', $file[0]->getAttribute('original'))[1];
     }
     private function extract_structure(){
     	$units = $this->doc->getElementsByTagName('trans-unit');
