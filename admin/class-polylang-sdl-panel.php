@@ -27,6 +27,9 @@ class Polylang_SDL_Admin_Panel {
             case 'sdl_update_account_details':
                 $this->action_update_account_options();
                 break;
+            case 'sdl_create_project_quick':
+                $this->action_create_project_quick($_POST['id']);
+                break;
             case 'sdl_create_project':
                 $this->action_create_project();
                 break;
@@ -310,7 +313,22 @@ class Polylang_SDL_Admin_Panel {
             echo '</table>';
         echo '</form>';
     }
+    private function action_create_project_quick($id){
+        $args = array(
+            'ProjectOptionsID' => get_option('sdl_projectoptions'),
+            'SrcLang' => strtolower(get_option('sdl_projectoptions_sourcelang')),
+            'Targets' => array(pll_get_post_language($id, 'locale'))
+        );
 
+        $this->api = new Polylang_SDL_API;
+
+        $response = $api->translation_create($args);
+        if(is_array($response)) {
+            return array('key' => 'translation_success', 'value' => count( $id ));
+        } else {
+            return array('key' => 'translation_error', 'value' => 'API error ' . $response);
+        }
+    }
     private function action_create_project(){
         $args = array(
             'Name' => $_POST['name'],
@@ -364,4 +382,4 @@ class Polylang_SDL_Admin_Panel {
         }
     }
 }
-?> 
+?>

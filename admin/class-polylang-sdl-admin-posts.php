@@ -57,7 +57,15 @@ class Polylang_SDL_Admin_Posts {
 			$response = $this->create_project_form($post_ids);
 		} else {
 			$this->args['Targets'] = array($suffix);
-			$response = $this->create_project($post_ids);
+			
+			$this->api = new Polylang_SDL_API;
+			$response = $this->api->translation_create($post_ids, $this->args);
+
+			if(is_array($response)) {
+				return array('key' => 'translation_success', 'value' => count( $post_ids ));
+			} else {
+				return array('key' => 'translation_error', 'value' => 'API error ' . $response);
+			}
 		}
 		$redirect_to = add_query_arg( $reponse['key'], $response['value'], $redirect_to );
 		return $redirect_to;
@@ -92,29 +100,7 @@ class Polylang_SDL_Admin_Posts {
 		exit;
 	}
 	public function create_project($id) {
-		$this->api = new Polylang_SDL_API;
 
-		if(sizeof($id) > 1) {
-			$this->args['Name'] = 'Bulk translation – ' . date('H:i jS M');
-		} else {
-			$this->args['Name'] = get_the_title($id[0]);
-		}
-		$convertor = new Polylang_SDL_Create_XLIFF;
-		$this->args['Files'] = $convertor->package_post($id, $this->args);
-		unset($this->args['Targets']);
-
-		$response = $this->api->project_create($this->args);
-		if(is_array($response)) {
-			$inprogress = get_option('sdl_translations_inprogress');
-			if($inprogress == null) {
-				$inprogress = array();
-			}
-			$inprogress[] = $response['ProjectId'];
-			update_option('sdl_translations_inprogress', $inprogress);
-			return array('key' => 'translation_success', 'value' => count( $id ));
-		} else {
-			return array('key' => 'translation_error', 'value' => 'API error ' . $response);
-		}
 	}
 }
 

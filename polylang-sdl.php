@@ -15,52 +15,11 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-
 //By default, hourly is the smallest interval available to WP-CRON. We add a custom one here 
 add_filter('cron_schedules', 'custom_scheduled_interval');
 function custom_scheduled_interval($schedules) {
 	$schedules['15minutes'] = array('interval'=>900, 'display'=>__('Once every 15 minutes'));
 	return $schedules;
-}
-//The CRON taskf
-if (! wp_next_scheduled ( 'poll_projects' )) {
-	wp_schedule_event(time(), '15minutes', 'poll_projects');
-}
-add_action('poll_projects', 'sdl_poll_projects');
-function sdl_poll_projects(){
-	$inprogress = get_option('sdl_translations_inprogress');
-	$api = new Polylang_SDL_API;
-	if(is_array($inprogress) && sizeof($inprogress) > 0) {
-		$api->verbose('Currently in progress: ', $inprogress);
-		foreach($inprogress as $project) {
-			$status = $api->project_getStatusCode($project);
-			$api->verbose('Current status: ', $status);
-			if($status == 3 || $status == 4 || $status == 5) {
-				$file = $api->translation_download($project);
-				$api->verbose('We just downloaded a new post translation');
-				if($file) {
-					$unpack = new Polylang_SDL_Unpack_XLIFF;
-					$posts = $unpack->convert($project);
-					$api->verbose('Structure: ', $posts);
-					if(is_array($posts)) {
-						$convertor = new Polylang_SDL_Local;
-						foreach($posts as $post) {
-							$saved = $convertor->save_post_translation($post);
-							$api->verbose('Successfully saved translation ID: ', $saved);
-						}
-						//An update could have happened while saving, so let's refresh the array
-						$latest = get_option('sdl_translations_inprogress');
-						unset($latest[$project]);
-						$api->verbose('Remaining in progress: ', array_diff($latest, [$project]));
-						update_option('sdl_translations_inprogress', array_diff($latest, [$project]));
-						$api->project_updateStatus($project, 'complete');
-					} 
-				}
-			}
-		}
-	} else {	
-		$api->verbose('None in progress');
-	}
 }
 
 /**
@@ -105,8 +64,59 @@ function run_polylang_sdl() {
 	$plugin = new Polylang_SDL();
 	$plugin->run();
 
+	if (! wp_next_scheduled ( 'poll_projects' )) {
+		wp_schedule_event(time(), '15minutes', 'poll_projects');
+	}
 }
-run_polylang_sdl();
+add_action('plugins_loaded', 'wpse120377_load');
+function wpse120377_load()
+{
+	if(class_exists('Polylang')) {
+		run_polylang_sdl();	
+	} else {
+		deactivate_plugins( plugin_basename( __FILE__ ) ); 
+	}
+}
+
+
+
+add_action('poll_projects', 'sdl_poll_projects');
+function sdl_poll_projects(){
+	$inprogress = get_option('sdl_translations_inprogress');
+	$inprogress_details = get_option('sdl_translations_record_details');
+	$api = new Polylang_SDL_API;
+	if(is_array($inprogress) && sizeof($inprogress) > 0) {
+		$api->verbose('Currently in progress: ', $inprogress);
+		foreach($inprogress as $project) {
+			$status = $api->project_getStatusCode($project);
+			$api->verbose('Current status: ', $status);
+			if($status == 3 || $status == 4 || $status == 5) {
+				$file = $api->translation_download($project);
+				$api->verbose('We just downloaded a new post translation');
+				if($file) {
+					$unpack = new Polylang_SDL_Unpack_XLIFF;
+					$posts = $unpack->convert($project);
+					$api->verbose('Structure: ', $posts);
+					if(is_array($posts)) {
+						$convertor = new Polylang_SDL_Local;
+						foreach($posts as $post) {
+							$saved = $convertor->save_post_translation($post);
+							$api->verbose('Successfully saved translation ID: ', $saved);
+						}
+						//An update could have happened while saving, so let's refresh the array
+						$latest = get_option('sdl_translations_inprogress');
+						unset($latest[$project]);
+						$api->verbose('Remaining in progress: ', array_diff($latest, [$project]));
+						update_option('sdl_translations_inprogress', array_diff($latest, [$project]));
+						$response = $api->project_updateStatus($project, 'complete');
+					} 
+				}
+			}
+		}
+	} else {	
+		$api->verbose('None in progress');
+	}
+}
 
 function get_formatted_locale($blog_id) {
 	$network_lang = get_site_option('WPLANG');

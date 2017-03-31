@@ -21,7 +21,9 @@ class Polylang_SDL_Local {
         
         //Check if a translation in this language is already attached to post - ie, if we're updating an existing translation
         $existing_id = pll_get_post($this->post_structure['original_id'], $this->post_structure['attributes']['target-language']);
-        return $this->update_translation($existing_id);
+        $final_id = $this->update_translation($existing_id);
+        update_post_meta($final_id, 'sdl_source_id', $this->post_structure['original_id']);
+        return $final_id;
     }
     public function get_post_translations($post_id){
         $results = array();

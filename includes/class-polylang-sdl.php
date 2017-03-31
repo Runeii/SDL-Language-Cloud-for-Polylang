@@ -141,6 +141,16 @@ class Polylang_SDL {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-admin-posts.php';
 
+		/**
+		 * The class responsible for building the SDL Managed Translation admin panel.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-panel.php';
+
+		/**
+		 * The class responsible for ensuring we're tied in to Polylang.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-integration.php';
+
 		$this->loader = new Polylang_SDL_Loader();
 
 	}

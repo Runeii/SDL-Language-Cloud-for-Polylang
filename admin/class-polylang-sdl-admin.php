@@ -20,6 +20,9 @@ class Polylang_SDL_Admin {
 			$this->polylang_sdl = $polylang_sdl;
 			$this->version = $version;
 			$this->register_interface();
+
+			new Polylang_SDL_Polylang_Integration;
+
 			add_action( 'current_screen', 'check_current_screen' ); 
 			function check_current_screen(){
 				if ( is_admin() ) {
@@ -54,7 +57,6 @@ class Polylang_SDL_Admin {
 	}
 
 	public function sdl_create_page(){
-    	include('class-polylang-sdl-panel.php');
    		new Polylang_SDL_Admin_Panel;
 	}
 }

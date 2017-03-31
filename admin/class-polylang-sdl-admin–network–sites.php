@@ -89,11 +89,15 @@ class SDL_Sites_Table extends WP_List_Table
         foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
             $optionsid = get_blog_option($site->blog_id, 'sdl_projectoptions', '0');
+            $lang = get_formatted_locale($site->blog_id);
+            if($lang == '' || $lang == null) {
+                $lang = get_locale();
+            }
             $data[] = array(
                 'blog_id' => $site->blog_id,
                 'name' => $details->blogname,
                 'url' => $details->path,
-                'lang' => get_formatted_locale($site->blog_id),
+                'lang' => $lang,
                 'src_lang' => $this->print_flags($this->pairs[$optionsid]['Source']),
                 'target_lang' => $this->print_flags($this->pairs[$optionsid]['Target']),
                 );
@@ -130,11 +134,17 @@ class SDL_Sites_Table extends WP_List_Table
         $selector .= '<select name="options_set">';
         $selector .= '<option>– Select project options set –</option>';
         $existingid = get_blog_option($id, 'sdl_projectoptions', '0');
+        $lang = get_formatted_locale($site->blog_id);
+        if($lang == '' || $lang == null) {
+            $lang = get_locale();
+        }
         foreach($this->options as $option){
-            if($option['Id'] === $existingid) {
-                $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
-            } else {
-                $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
+            if(in_array($lang, $this->pairs[$option['Id']]['Source'])) {
+                if($option['Id'] === $existingid) {
+                    $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
+                } else {
+                    $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
+                }
             }
         }
         $selector .= '</select>';

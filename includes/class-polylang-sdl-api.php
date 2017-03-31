@@ -47,6 +47,9 @@ class Polylang_SDL_API {
 	        case "PUT":
 	            curl_setopt($curl, CURLOPT_PUT, 1);
 	            break;
+	        case "DELETE":
+	            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+	            break;
 	        default:
 	            if ($data)
 	                $url = sprintf("%s?%s", $url, http_build_query($data));
@@ -376,6 +379,31 @@ class Polylang_SDL_API {
 	/*
 	// Translation
 	*/
+	public function translation_create($id, $args){
+		if(sizeof($id) > 1) {
+			$args['Name'] = 'Bulk translation – ' . date('H:i jS M');
+		} else {
+			$args['Name'] = get_the_title($id[0]);
+		}
+		$convertor = new Polylang_SDL_Create_XLIFF;
+		$args['Files'] = $convertor->package_post($id, $args);
+		unset($args['Targets']);
+		$response = $this->project_create($args);
+		if(is_array($response)) {
+			$inprogress = get_option('sdl_translations_inprogress');
+			if($inprogress == null) {
+				$inprogress = array();
+			}
+			$inprogress[] = $response['ProjectId'];
+			update_option('sdl_translations_inprogress', $inprogress);
+			$inprogress_details[$response['ProjectId']] = array(
+				'project_options' => $args['ProjectOptionsID'],
+				'SrcLang' => $args['SrcLang']
+				);
+			update_option('sdl_translations_record_details', $inprogress_details);
+		}
+		return $response;
+	}
 	public function translation_download($id) {
 		$args = array(
 			'projectId' => $id,

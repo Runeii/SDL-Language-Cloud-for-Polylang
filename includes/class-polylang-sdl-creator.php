@@ -85,10 +85,12 @@ class Polylang_SDL_Create_XLIFF {
     		}
     	}
         $post_meta = get_post_custom($id);
-        foreach($post_meta as $name => $value) {
-            //Wordpress stores system meta with the "_" prefix. We don't want these fields.
-            if($name[0] != "_" ) { 
-                $this->structure['meta'][$name] = $value[0];
+        if($post_meta != false && $post_meta != null && $post_meta != '') {
+            foreach($post_meta as $name => $value) {
+                //Wordpress stores system meta with the "_" prefix. We don't want these fields.
+                if($name[0] != "_" ) { 
+                    $this->structure['meta'][$name] = $value[0];
+                }
             }
         }
 	}
