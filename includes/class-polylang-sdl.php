@@ -127,6 +127,11 @@ class Polylang_SDL {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-local.php';
 
 		/**
+		 * The class responsible for working with the post translation meta data model.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-post-model.php';
+
+		/**
 		 * The class responsible for working with translation files.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-files.php';

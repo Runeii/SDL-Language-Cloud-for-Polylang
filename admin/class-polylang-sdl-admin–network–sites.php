@@ -28,15 +28,12 @@ class SDL_Sites_Table extends WP_List_Table
         echo '<input type="hidden" name="action" value="sdl_admin_refreshoptions" />';
         echo '<button class="button button-primary">Refresh project options</button>';
         echo '</form>';
-        $this->options = get_site_option('sdl_settings_projectoptions');
+        $this->options = get_site_option('sdl_settings_projectoptions_all');
         if($this->options === null || $this->options === false) {
             $API = new Polylang_SDL_API();
             $this->options = $API->user_options();
         }
         $this->pairs = get_site_option('sdl_settings_projectoptions_pairs');
-        if($this->options === null || $this->options === false){
-            die();
-        }
         $columns = $this->get_columns();
         $hidden = $this->get_hidden_columns();
         $sortable = $this->get_sortable_columns();
@@ -88,7 +85,7 @@ class SDL_Sites_Table extends WP_List_Table
         $data = array();
         foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
-            $optionsid = get_blog_option($site->blog_id, 'sdl_projectoptions', '0');
+            $optionsid = get_blog_option($site->blog_id, 'sdl_settings_projectoption', '0');
             $lang = get_formatted_locale($site->blog_id);
             if($lang == '' || $lang == null) {
                 $lang = get_locale();
@@ -131,23 +128,7 @@ class SDL_Sites_Table extends WP_List_Table
         $selector = '<form method="post" action="admin.php?page=managedtranslation">';
         $selector .= '<input type="hidden" name="action" value="sdl_admin_updateoptions" />';
         $selector .= '<input type="hidden" name="blog_id" value="'. $id . '" />';
-        $selector .= '<select name="options_set">';
-        $selector .= '<option>– Select project options set –</option>';
-        $existingid = get_blog_option($id, 'sdl_projectoptions', '0');
-        $lang = get_formatted_locale($site->blog_id);
-        if($lang == '' || $lang == null) {
-            $lang = get_locale();
-        }
-        foreach($this->options as $option){
-            if(in_array($lang, $this->pairs[$option['Id']]['Source'])) {
-                if($option['Id'] === $existingid) {
-                    $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
-                } else {
-                    $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
-                }
-            }
-        }
-        $selector .= '</select>';
+        $selector .= $this->parent->filter_project_options($site->blog_id);
         $selector .= '<button class="button button-primary">Update</button>';
         $selector .= '</form>';
         return $selector;

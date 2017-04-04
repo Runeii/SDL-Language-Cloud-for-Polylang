@@ -31,3 +31,11 @@
 .buttonform {
 	display:inline-block;
 }
+.wp-core-ui .column-sdl_translation button {
+    white-space: normal;
+    display: block;
+    height: auto;
+    min-height: 28px;
+    width:100%;
+    line-height: 20px;
+}

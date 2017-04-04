@@ -5,8 +5,11 @@ class Polylang_SDL_Local {
 	private $verbose = false;
     private $post_structure;
     private $syslangs;
+    private $post_model;
+
     public function __construct() {
         $this->syslangs = pll_languages_list();
+        $this->post_model = new Polylang_SDL_Model;
     }
 
     private function verbose($msg) {
@@ -22,15 +25,8 @@ class Polylang_SDL_Local {
         //Check if a translation in this language is already attached to post - ie, if we're updating an existing translation
         $existing_id = pll_get_post($this->post_structure['original_id'], $this->post_structure['attributes']['target-language']);
         $final_id = $this->update_translation($existing_id);
-        update_post_meta($final_id, 'sdl_source_id', $this->post_structure['original_id']);
+        update_post_meta($final_id, '_sdl_source_id', $this->post_structure['original_id']);
         return $final_id;
-    }
-    public function get_post_translations($post_id){
-        $results = array();
-        foreach($this->syslangs as $lang) {
-            $results[$lang] = pll_get_post($post_id, $lang);
-        }
-        return $results;
     }
     public function get_term_translations($term_id){
         $results = array();

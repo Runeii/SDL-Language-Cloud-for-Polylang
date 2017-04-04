@@ -78,30 +78,28 @@ function wpse120377_load()
 	}
 }
 
-
-
 add_action('poll_projects', 'sdl_poll_projects');
 function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
-	$inprogress_details = get_option('sdl_translations_record_details');
 	$api = new Polylang_SDL_API;
+	//Test if anything is in progress
 	if(is_array($inprogress) && sizeof($inprogress) > 0) {
-		$api->verbose('Currently in progress: ', $inprogress);
 		foreach($inprogress as $project) {
 			$status = $api->project_getStatusCode($project);
-			$api->verbose('Current status: ', $status);
+			//Test if any are now listed as complete
 			if($status == 3 || $status == 4 || $status == 5) {
 				$file = $api->translation_download($project);
-				$api->verbose('We just downloaded a new post translation');
+				//Test that the download was successful 
 				if($file) {
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
 					$posts = $unpack->convert($project);
-					$api->verbose('Structure: ', $posts);
+					//Test that we successfull converted the XLIFF
 					if(is_array($posts)) {
 						$convertor = new Polylang_SDL_Local;
 						foreach($posts as $post) {
-							$saved = $convertor->save_post_translation($post);
-							$api->verbose('Successfully saved translation ID: ', $saved);
+							$saved_id = $convertor->save_post_translation($post);
+							$post_model = new Polylang_SDL_Model;
+							$post_model->add_to_map($saved_id, $project);
 						}
 						//An update could have happened while saving, so let's refresh the array
 						$latest = get_option('sdl_translations_inprogress');
@@ -113,13 +111,20 @@ function sdl_poll_projects(){
 				}
 			}
 		}
-	} else {	
+	} else {
 		$api->verbose('None in progress');
 	}
 }
 
-function get_formatted_locale($blog_id) {
-	$network_lang = get_site_option('WPLANG');
-	$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);
-	return str_replace('_', '-', $site_lang);
+function get_formatted_locale($blog_id = null) {
+	if($blog_id === null) {
+		$site_lang = get_locale();
+	} else {
+		$network_lang = get_site_option('WPLANG');
+		$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);	
+	}
+	return format_locale($site_lang);
+}
+function format_locale($locale){
+	return str_replace('_', '-', $locale);
 }

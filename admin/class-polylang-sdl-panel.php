@@ -5,8 +5,10 @@ class Polylang_SDL_Admin_Panel {
     private $tabs;
     private $verbose = false;
     private $API;
+    private $parent;
 
-    public function __construct(){
+    public function __construct($parent){
+        $this->parent = $parent;
         $this->API = new Polylang_SDL_API(true);
         if(isset($_POST['action'])) {
             $this->process_action();
@@ -27,6 +29,9 @@ class Polylang_SDL_Admin_Panel {
             case 'sdl_update_account_details':
                 $this->action_update_account_options();
                 break;
+            case 'sdl_update_generalsettings':
+                $this->action_update_general_settings();
+                break;
             case 'sdl_create_project_quick':
                 $this->action_create_project_quick($_POST['id']);
                 break;
@@ -35,13 +40,13 @@ class Polylang_SDL_Admin_Panel {
                 break;
             case 'sdl_admin_updateoptions':
                 $blog_id = intval( $_POST['blog_id'] );
-                $id = $_POST['options_set'];
+                $id = $_POST['sdl_settings_projectoption'];
                 $pairs = get_site_option('sdl_settings_projectoptions_pairs');
-                update_blog_option($blog_id, 'sdl_projectoptions', $id);
-                update_blog_option($blog_id, 'sdl_projectoptions_sourcelang', strtolower($pairs[$id]['Source'][0]));
+                update_blog_option($blog_id, 'sdl_settings_projectoption', $id);
+                update_blog_option($blog_id, 'sdl_settings_projectoptions_sourcelang', strtolower($pairs[$id]['Source'][0]));
                 break;
             case 'sdl_admin_refreshoptions' :
-                update_site_option('sdl_settings_projectoptions', null);
+                update_site_option('sdl_settings_projectoptions_all', null);
                 update_site_option('sdl_settings_projectoptions_pairs', null);
                 break;
             case 'sdl_admin_togglenetwork' :
@@ -84,6 +89,8 @@ class Polylang_SDL_Admin_Panel {
         if($this->API->test_loggedIn()){
             if(is_network_admin()) {
                 $tabs['network'] = 'Network Management';
+            } else {
+                $tabs['settings'] = 'General settings';
             }
         }
         $this->tabs = $tabs;
@@ -93,6 +100,8 @@ class Polylang_SDL_Admin_Panel {
             $this->current_tab = $_GET[ 'tab' ];  
         } else if(isset( $this->tabs['network'] )) {
             $this->current_tab = 'network';
+        } else if(isset( $this->tabs['settings'] )) {
+            $this->current_tab = 'settings';
         } else if(isset( $this->tabs['account'] )) {
             $this->current_tab = 'account';
         } else {
@@ -140,6 +149,20 @@ class Polylang_SDL_Admin_Panel {
                 $sitesTable = new SDL_Sites_Table();
                 $sitesTable->prepare_items();
                 $sitesTable->display();
+                break;
+            case 'settings':
+                echo "<form id='general_settings' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
+                    echo '<input type="hidden" name="action" value="sdl_update_generalsettings" />';
+                    echo '<h2>General settings</h2>';
+                    echo '<table class="form-table">';
+                    echo '<tr>';
+                        echo '<th><label for="sdl_settings_projectoptions">Default project options</label></th>';
+                            echo '<td>'.$this->parent->filter_project_options().'</td>';
+                    echo '</tr>';
+                    echo '<tr>';
+                        echo '<th><button type="submit" form="general_settings" class="button button-primary">Save</button></th>';
+                    echo '</tr>';
+                echo '</form>';
                 break;
             case 'account':
                 echo "<form id='account_details' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
@@ -205,10 +228,10 @@ class Polylang_SDL_Admin_Panel {
             $SrcLang = pll_get_post_language($ids[0]);
         }
         if($this->is_SDL_manager()) {
-            $PIDs = get_site_option('sdl_settings_projectoptions');
+            $PIDs = get_site_option('sdl_settings_projectoptions_all');
         } else {
-            $PID = get_option('sdl_projectoptions');
-            $PIDs = get_site_option('sdl_settings_projectoptions');
+            $PID = get_option('sdl_settings_projectoption');
+            $PIDs = get_site_option('sdl_settings_projectoptions_all');
             $offset = array_search($PID, array_column($PIDs, 'Id'));
         }
         $date = date('Y-m-d', strtotime("+1 week")); 
@@ -246,7 +269,7 @@ class Polylang_SDL_Admin_Panel {
                     echo '<td>';                        
                     if($this->is_SDL_manager()) {
                     } else {
-                        $langs = get_option('sdl_projectoptions_sourcelang');
+                        $langs = get_option('sdl_settings_projectoptions_sourcelang');
                         if(is_array($langs)) {
                             echo '<select name="SrcLang" form="create_project">';
                             foreach($langs as $lang) {
@@ -315,8 +338,8 @@ class Polylang_SDL_Admin_Panel {
     }
     private function action_create_project_quick($id){
         $args = array(
-            'ProjectOptionsID' => get_option('sdl_projectoptions'),
-            'SrcLang' => strtolower(get_option('sdl_projectoptions_sourcelang')),
+            'ProjectOptionsID' => get_option('sdl_settings_projectoption'),
+            'SrcLang' => strtolower(get_option('sdl_settings_projectoptions_sourcelang')),
             'Targets' => array(pll_get_post_language($id, 'locale'))
         );
 
@@ -344,27 +367,7 @@ class Polylang_SDL_Admin_Panel {
         if($_POST['Vendors'] != null) {
             $args['Vendors'] = $_POST['Vendors'];
         }
-        $id = explode(',', urldecode($_POST['id']));
-        $convertor = new Polylang_SDL_Create_XLIFF();
-        $args['Files'] = $convertor->package_post($id, $args);
-        $response = $this->API->project_create($args);
-        if(is_array($response)) {
-            $inprogress = get_option('sdl_translations_inprogress');
-            if($inprogress == null) {
-                $inprogress = array();
-            }
-            $inprogress[] = $response['ProjectId'];
-            update_option('sdl_translations_inprogress', $inprogress);
-            wp_redirect(
-                add_query_arg(
-                    array(
-                        'page' => 'edit.php',
-                        'translation_success' => count( $id ),
-                        ), 
-                    admin_url('admin.php')
-                )
-            );
-        }
+        $response = $this->API->translation_create($id, $args, admin_url('admin.php'));
     }
 
     private function action_update_account_options() {
@@ -375,6 +378,16 @@ class Polylang_SDL_Admin_Panel {
                 $output = base64_encode($output);
                 update_site_option($option, $output);
             } else if (isset($_POST[$option])) { 
+                update_site_option($option, $_POST[$option]);
+            } else {
+                delete_site_option($option);
+            }
+        }
+    }
+    private function action_update_general_settings() {
+        $options = array('sdl_settings_projectoption');
+        foreach ($options as $option) {
+            if (isset($_POST[$option])) { 
                 update_site_option($option, $_POST[$option]);
             } else {
                 delete_site_option($option);
