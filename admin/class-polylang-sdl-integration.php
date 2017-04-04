@@ -1,42 +1,43 @@
 <?php
 class Polylang_SDL_Polylang_Integration {
+	private $post_model;
+
 	public function __construct(){
 		add_action('post_updated', array($this, 'flag_existing_translations'), 10, 3);
 		add_action('current_screen', array($this, 'post_screen_functions'));
+		$this->post_model = new Polylang_SDL_Model;
 	}
 	public function flag_existing_translations($post_ID, $post_after, $post_before){
-		$local = new Polylang_SDL_Local;
-		$flag = get_post_meta($post_ID, 'sdl_flag_outofdate', true);
-		if($flag == false ||  $flag == 0 || $flag == null || $flag == '') {
-			foreach($local->get_post_translations($post_ID) as $trans_ID) {
-				if($trans_ID !== $post_ID) {
-					if($post_before->post_content != $post_after->post_content) {
-						update_post_meta($trans_ID, 'sdl_flag_outofdate', true);
-					}
-				}
-			}
+		$source_id = $this->post_model->get_source_id($post_ID);
+		if($source_id == $post_ID) {
+			$this->post_model->update_details($post_ID, 'updated', get_the_modified_date('U', $post));
 		}
-		update_post_meta($post_ID, 'sdl_flag_outofdate', false);
+		return true;
 	}
 	public function post_screen_functions(){
 		global $my_admin_page;
 		$screen = get_current_screen();
 		if(isset($_POST['sdl_button_update_translation'])) {
 			$id = $_POST['sdl_id'];
-			$options = get_post_meta($id, 'sdl_source_projectoptions', true);
-			$inprogress_details = get_option('sdl_translations_record_details');
+			$source_map = $this->post_model->get_source_map($id);
+			$self_map = $this->post_model->get_details($id);
+
 			$args = array(
-					'ProjectOptionsID' => $inprogress_details[$options]['project_options'],
-					'SrcLang' => $inprogress_details[$options]['SrcLang'],
+					'ProjectOptionsID' => $self_map['produced_by'],
+					'SrcLang' => $source_map['parent']['locale'],
 					'Targets' => array($_POST['target'])
 				);
+
 			$api = new Polylang_SDL_API;
-			$src_id = pll_get_post($id, explode('-', $args['SrcLang'])[0]);
-			$response = $api->translation_create(array($src_id), $args);
+			$response = $api->translation_create(array($source_map['parent']['id']), $args);
+
 			if(is_array($response)) {
-				/// TODO: Return success message
+				add_action( 'admin_notices', array($this, 'sdl_notice_update_success'), 10, 2 );
+				add_settings_error('managedtranslation', 'update', 'Successfully requested translations update via SDL Managed Translation', 'updated');	
 			} else {
 				// TODO: Return error message
+				add_action( 'admin_notices', array($this, 'sdl_notice_update_failed'), 10, 2 );
+				add_settings_error('managedtranslation', 'update', 'Failed to send posts for update via SDL Managed Translation', 'error');
 			}
 		}
 		if ( $screen->id == 'post' && pll_is_translated_post_type( $screen->post_type ) ){
@@ -44,7 +45,10 @@ class Polylang_SDL_Polylang_Integration {
 		}
 	}
 	public function update_existing_translations($post_type, $post ){
-		if (get_post_meta($post->ID, 'sdl_flag_outofdate', true) === true || get_post_meta($post->ID, 'sdl_flag_outofdate', true) == 1 ) {
+		$source_id = $this->post_model->get_source_id($post->ID);
+		$out_of_date = $this->post_model->get_old($post->ID);
+		$lang = pll_get_post_language($post->ID);
+		if($source_id != $post->ID && is_array($out_of_date) && in_array($lang, $out_of_date)) {
 			add_meta_box('sdl_update_post', 'Update translation', array($this, 'update_existing_translations_box'), $post_type, 'side', 'high');
 		}
 	}
@@ -58,6 +62,16 @@ class Polylang_SDL_Polylang_Integration {
 	}
 	public function supported_project_options(){
 		
+	}
+	public function sdl_notice_update_success(){
+		echo '<div class="notice notice-success is-dismissible">
+			        <p>'. __( 'Successfully requested translation update via SDL Managed Translation', 'managedtranslation' ) .'</p>
+			    </div>';
+	}
+	public function sdl_notice_update_failed(){
+		echo '<div class="notice notice-error is-dismissible">
+	        <p>'. __( 'Failed to send translations for update via SDL Managed Translation', 'managedtranslation' ) .'</p>
+	    </div>';
 	}
 
 }
