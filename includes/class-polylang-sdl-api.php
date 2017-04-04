@@ -211,7 +211,7 @@ class Polylang_SDL_API {
 	public function user_options() {
 		$response = $this->call('GET', '/projects/options');
 		if(is_array($response)) {
-			update_site_option('sdl_settings_projectoptions', $response);
+			update_site_option('sdl_settings_projectoptions_all', $response);
 			$options = array(
 				0 => array(
 					'Source' => array(),
@@ -379,11 +379,13 @@ class Polylang_SDL_API {
 	/*
 	// Translation
 	*/
-	public function translation_create($id, $args){
-		if(sizeof($id) > 1) {
-			$args['Name'] = 'Bulk translation – ' . date('H:i jS M');
-		} else {
-			$args['Name'] = get_the_title($id[0]);
+	public function translation_create($id, $args, $redirect = null){
+		if(!isset($args['Name'])) {
+			if(sizeof($id) > 1) {
+				$args['Name'] = 'Bulk translation – ' . date('H:i jS M');
+			} else {
+				$args['Name'] = get_the_title($id[0]);
+			}	
 		}
 		$convertor = new Polylang_SDL_Create_XLIFF;
 		$args['Files'] = $convertor->package_post($id, $args);
@@ -401,8 +403,14 @@ class Polylang_SDL_API {
 				'SrcLang' => $args['SrcLang']
 				);
 			update_option('sdl_translations_record_details', $inprogress_details);
+			foreach($id as $post) {
+				update_post_meta($post, '_sdl_source_projectoptions', $args['ProjectOptionsID']);	
+			}
+			$reply = array('translation_success' => count( $id ));
 		}
-		return $response;
+		else {
+			$reply = array('translation_error' => 'API error ' . $response);
+		}
 	}
 	public function translation_download($id) {
 		$args = array(

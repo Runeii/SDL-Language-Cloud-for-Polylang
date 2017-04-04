@@ -101,6 +101,7 @@ function sdl_poll_projects(){
 						$convertor = new Polylang_SDL_Local;
 						foreach($posts as $post) {
 							$saved = $convertor->save_post_translation($post);
+							update_post_meta($saved, '_sdl_source_projectoptions', $project);
 							$api->verbose('Successfully saved translation ID: ', $saved);
 						}
 						//An update could have happened while saving, so let's refresh the array
@@ -118,8 +119,12 @@ function sdl_poll_projects(){
 	}
 }
 
-function get_formatted_locale($blog_id) {
-	$network_lang = get_site_option('WPLANG');
-	$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);
+function get_formatted_locale($blog_id = null) {
+	if($blog_id === null) {
+		$site_lang = get_locale();
+	} else {
+		$network_lang = get_site_option('WPLANG');
+		$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);	
+	}
 	return str_replace('_', '-', $site_lang);
 }

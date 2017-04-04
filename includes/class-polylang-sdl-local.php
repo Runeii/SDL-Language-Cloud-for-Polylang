@@ -22,7 +22,7 @@ class Polylang_SDL_Local {
         //Check if a translation in this language is already attached to post - ie, if we're updating an existing translation
         $existing_id = pll_get_post($this->post_structure['original_id'], $this->post_structure['attributes']['target-language']);
         $final_id = $this->update_translation($existing_id);
-        update_post_meta($final_id, 'sdl_source_id', $this->post_structure['original_id']);
+        update_post_meta($final_id, '_sdl_source_id', $this->post_structure['original_id']);
         return $final_id;
     }
     public function get_post_translations($post_id){
@@ -31,6 +31,15 @@ class Polylang_SDL_Local {
             $results[$lang] = pll_get_post($post_id, $lang);
         }
         return $results;
+    }
+    public function get_parent_translation($post_id){
+        $translations = $this->get_post_translations($post_id);
+        foreach($translations as $post) {
+            $source = get_post_meta($post, '_sdl_source_id', true);
+            if($source > 0) {
+                return $source;
+            }
+        }
     }
     public function get_term_translations($term_id){
         $results = array();

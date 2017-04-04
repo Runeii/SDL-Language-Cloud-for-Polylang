@@ -15,7 +15,7 @@ class Polylang_SDL_Admin {
 	private $version;
 	private $option_name;
 
-	public function __construct( $polylang_sdl, $version ) {
+	public function __construct($polylang_sdl, $version) {
 		if(is_admin()) {
 			$this->polylang_sdl = $polylang_sdl;
 			$this->version = $version;
@@ -57,7 +57,35 @@ class Polylang_SDL_Admin {
 	}
 
 	public function sdl_create_page(){
-   		new Polylang_SDL_Admin_Panel;
+   		new Polylang_SDL_Admin_Panel($this);
+	}
+	public function filter_project_options($blog = null){
+		if($blog === null) {
+			$existing_id = get_option('sdl_settings_projectoption');
+		} else {
+			$existing_id = get_blog_option($blog, 'sdl_settings_projectoption', '0');
+		}
+	    $lang = get_formatted_locale($site->blog_id);
+	    $options = get_site_option('sdl_settings_projectoptions_all');
+        if($options === null || $options === false) {
+            $API = new Polylang_SDL_API();
+            $options = $API->user_options();
+        }
+        $available_pairs = get_site_option('sdl_settings_projectoptions_pairs');
+
+        $selector .= '<select name="sdl_settings_projectoption">';
+        $selector .= '<option>– Select project options set –</option>';
+        foreach($options as $option){
+            if(in_array($lang, $available_pairs[$option['Id']]['Source'])) {
+                if($option['Id'] === $existing_id) {
+                    $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
+                } else {
+                    $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
+                }
+            }
+        }
+        $selector .= '</select>';
+        return $selector;
 	}
 }
 
