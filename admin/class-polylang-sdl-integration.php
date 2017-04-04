@@ -21,7 +21,6 @@ class Polylang_SDL_Polylang_Integration {
 			$id = $_POST['sdl_id'];
 			$source_map = $this->post_model->get_source_map($id);
 			$self_map = $this->post_model->get_details($id);
-
 			$args = array(
 					'ProjectOptionsID' => $self_map['produced_by'],
 					'SrcLang' => $source_map['parent']['locale'],
@@ -30,7 +29,6 @@ class Polylang_SDL_Polylang_Integration {
 
 			$api = new Polylang_SDL_API;
 			$response = $api->translation_create(array($source_map['parent']['id']), $args);
-
 			if(is_array($response)) {
 				add_action( 'admin_notices', array($this, 'sdl_notice_update_success'), 10, 2 );
 				add_settings_error('managedtranslation', 'update', 'Successfully requested translations update via SDL Managed Translation', 'updated');	
