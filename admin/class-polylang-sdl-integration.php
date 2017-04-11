@@ -45,7 +45,7 @@ class Polylang_SDL_Polylang_Integration {
 	public function update_existing_translations($post_type, $post ){
 		$source_id = $this->post_model->get_source_id($post->ID);
 		$out_of_date = $this->post_model->get_old($post->ID);
-		$lang = pll_get_post_language($post->ID);
+		$lang = sdl_get_post_language($post->ID);
 		if($source_id != $post->ID && is_array($out_of_date) && in_array($lang, $out_of_date)) {
 			add_meta_box('sdl_update_post', 'Update translation', array($this, 'update_existing_translations_box'), $post_type, 'side', 'high');
 		}
@@ -55,7 +55,7 @@ class Polylang_SDL_Polylang_Integration {
 		print __('This translation is now out of date.', 'managedtranslation');
 		echo '<br /><br />';
 		echo '<input type="hidden" name="sdl_id" value="'. $post_id .'" />
-				<input type="hidden" name="target" value="'. pll_get_post_language($post_id) .'" />
+				<input type="hidden" name="target" value="'. sdl_get_post_language($post_id) .'" />
 				<button class="button button-primary" name="sdl_button_update_translation">Update translation now</button>';
 	}
 	public function supported_project_options(){
@@ -71,6 +71,22 @@ class Polylang_SDL_Polylang_Integration {
 	        <p>'. __( 'Failed to send translations for update via SDL Managed Translation', 'managedtranslation' ) .'</p>
 	    </div>';
 	}
-
+	public function sdl_manage_languages($lang, $mode = 'add'){
+		//Polylang doesn't offer a hook or function for directly interacting with languages, so this is a bit of a hack job
+		include( PLL_SETTINGS_INC.'/languages.php' );
+		if($mode == 'add') {
+			$polylang_set = $languages[$lang];
+			$args = array(
+				'name' => $polylang_set[2],
+				'locale' => $polylang_set[1],
+				'slug' => $polylang_set[0],
+				'flag' => $polylang_set[4],
+				'ltr' => $polylang_set[3]
+				);
+			$polylang_options = get_site_option('polylang', true);
+			$polylang_settings = new PLL_Admin_Model($polylang_options);
+			$polylang_settings->add_language( $args );
+		}
+	}
 }
 ?>
