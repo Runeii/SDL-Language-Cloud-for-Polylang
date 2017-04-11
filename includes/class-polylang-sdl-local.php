@@ -66,7 +66,7 @@ class Polylang_SDL_Local {
             );
         $id = wp_insert_post($args);
         pll_set_post_language($id, $this->post_structure['attributes']['target-language']);
-        $translations = $this->get_post_translations($this->post_structure['original_id']);
+        $translations = $this->post_model->get_post_translations($this->post_structure['original_id']);
         $translations[$this->post_structure['attributes']['target-language']] = $id;
         pll_save_post_translations($translations);
 
