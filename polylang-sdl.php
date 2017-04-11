@@ -22,23 +22,13 @@ function custom_scheduled_interval($schedules) {
 	return $schedules;
 }
 
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-polylang-sdl-activator.php
- */
-
 function activate_polylang_sdl() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-polylang-sdl-activator.php';
 	Polylang_SDL_Activator::activate();
 }
 
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-polylang-sdl-deactivator.php
- */
 function deactivate_polylang_sdl() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-polylang-sdl-deactivator.php';
-	Polylang_SDL_Deactivator::deactivate();
+	wp_clear_scheduled_hook('poll_projects');
 }
 
 register_activation_hook( __FILE__, 'activate_polylang_sdl' );
@@ -68,17 +58,16 @@ function run_polylang_sdl() {
 		wp_schedule_event(time(), '15minutes', 'poll_projects');
 	}
 }
-add_action('plugins_loaded', 'wpse120377_load');
-function wpse120377_load()
+add_action('plugins_loaded', 'run_polylang_sdl');
+
+function test_dependencies()
 {
-	if(class_exists('Polylang')) {
-		run_polylang_sdl();	
-	} else {
-		deactivate_plugins( plugin_basename( __FILE__ ) ); 
+	if(!class_exists('Polylang')) {
+		deactivate_plugins( plugin_basename( __FILE__) );
 	}
 }
+add_action('admin_init', 'test_dependencies');
 
-add_action('poll_projects', 'sdl_poll_projects');
 function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
 	$api = new Polylang_SDL_API;
@@ -99,7 +88,7 @@ function sdl_poll_projects(){
 						foreach($posts as $post) {
 							$saved_id = $convertor->save_post_translation($post);
 							$post_model = new Polylang_SDL_Model;
-							$post_model->add_to_map($saved_id, $project);
+							$post_model->process_in_progress($saved_id);
 						}
 						//An update could have happened while saving, so let's refresh the array
 						$latest = get_option('sdl_translations_inprogress');
@@ -114,6 +103,22 @@ function sdl_poll_projects(){
 	} else {
 		$api->verbose('None in progress');
 	}
+}
+add_action('poll_projects', 'sdl_poll_projects');
+
+function sdl_get_post_language($id = null, $option = 'slug'){
+	$lang = pll_get_post_language($id, $option);
+	if($lang == '' || $lang == false || $lang == null) {
+		$lang = pll_current_language();
+		if($lang == '' || $lang == false || $lang == null) {
+			$integrator = new Polylang_SDL_Polylang_Integration;
+			$locale = get_locale();
+			$integrator->sdl_manage_languages($locale, 'add');
+		}
+		pll_set_post_language($id, $lang);
+		$lang = pll_get_post_language($id, $option);
+	}
+	return $lang;
 }
 
 function get_formatted_locale($blog_id = null) {
