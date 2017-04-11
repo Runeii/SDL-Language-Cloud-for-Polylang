@@ -44,7 +44,7 @@ class Polylang_SDL_Admin_Posts {
 		  		$short_name = explode('-', $language)[0];
 		  		if(in_array($short_name, $polylang_languages)) {
 			  		$bulk_actions['sdl_translate_' . $language] = __('Quick translate into ' . strtoupper($short_name), 'managedtranslation');
-			  		$string .= $language . '_';	
+			  		$string .= $language . '_';
 		  		}
 		  	}
 		  }
@@ -61,7 +61,8 @@ class Polylang_SDL_Admin_Posts {
 			$response = $this->create_project_form($post_ids);
 		} else {
 			$this->args['Targets'] = array($suffix);
-			$this->api->translation_create($post_ids, $this->args);
+			$response = $this->api->translation_create($post_ids, $this->args);
+			wp_redirect( add_query_arg($response, admin_url('edit.php')) );
 		}
 	}
 
@@ -77,6 +78,18 @@ class Polylang_SDL_Admin_Posts {
 	  } else if ( ! empty( $_REQUEST['translation_error'] ) ) {
 	    print( '<div id="message" class="updated fade">' . 
 	    	__( 'Translation failed: ' . $_REQUEST['translation_error'], 'managedtranslation') . 
+	    	'</div>' );
+	  } else if ( ! empty( $_REQUEST['update_success'] ) ) {
+	    $emailed_count = intval( $_REQUEST['update_success'] );
+	    printf( '<div id="message" class="updated fade">' .
+	      _n( 'Successfully sent %s translations to the Managed Translation service for update.',
+	        'Successfully sent %s translations to the Managed Translation service for update.',
+	        $emailed_count,
+	        'managedtranslation'
+	      ) . '</div>', $emailed_count );
+	  } else if ( ! empty( $_REQUEST['update_error'] ) ) {
+	    print( '<div id="message" class="updated fade">' . 
+	    	__( 'Translation update failed: ' . $_REQUEST['update_error'], 'managedtranslation') . 
 	    	'</div>' );
 	  }
 	}
@@ -103,16 +116,32 @@ class Polylang_SDL_Admin_Posts {
 				$map = $this->post_model->get_source_map($post_id);
 				$details = $this->post_model->get_details($post_id, $map);
 				$out_of_date = $this->post_model->get_old($post_id);
-				if(is_array($map['in_progress']) && array_key_exists($details['lang'], $map['in_progress'])) {
-					echo '<div class="button button-secondary" disabled>In progress</div>';	
-				} elseif(is_array($out_of_date) && array_key_exists($details['lang'], $out_of_date)) {
-					echo '<button class="button button-secondary">Update translation</button>';	
-				} elseif(is_array($out_of_date) && $post_id == $map['parent']['id'] && count($out_of_date) > 0) {
-					echo '<button class="button button-primary">Update all translations</button>';
-				} elseif($post_id != $map['parent']['id']) {
-					echo '<button class="button delete" disabled>Up to date</button>';		
-				} elseif($post_id == $map['parent']['id']) {
-					echo '<button class="button delete" disabled>Translations up to date</button>';		
+				if(count($map['children']) > 0) {
+					if(	is_array($map['in_progress']) && 
+							(array_key_exists($details['lang'], $map['in_progress']) || $post_id == $map['parent']['id'])
+						) {
+						echo '<button class="button button-secondary" disabled >Translation in progress</button>';	
+					} elseif(is_array($out_of_date) && array_key_exists($details['lang'], $out_of_date)) {
+						$args = array(
+							'action' => 'sdl_update_single',
+							'src_id' => $map['parent']['id'],
+							'src_lang' => $map['parent']['locale'],
+							'target_lang' => $details['locale'],
+							'project_options' => $details['produced_by'],
+							);
+						echo '<a class="button button-secondary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update translation</button>';
+					} elseif(is_array($out_of_date) && $post_id == $map['parent']['id'] && count($out_of_date) > 0) {
+						$args = array(
+							'action' => 'sdl_update_all',
+							'src_id' => $map['parent']['id'],
+							'redirect_to' => admin_url('edit.php')
+							);
+						echo '<a class="button button-primary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update all Translations</button>';
+					}  elseif($post_id != $map['parent']['id']) {
+						echo '<button class="button delete" disabled>Up to date</button>';		
+					} elseif($post_id == $map['parent']['id']) {
+						echo '<button class="button delete" disabled>Translations up to date</button>';		
+					}	
 				}
 			break;
 		}
