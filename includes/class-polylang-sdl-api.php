@@ -380,6 +380,9 @@ class Polylang_SDL_API {
 	// Translation
 	*/
 	public function translation_create($id, $args, $redirect = null){
+		if(!is_array($id)) {
+			$id = array($id);
+		}
 		if(!isset($args['Name'])) {
 			if(sizeof($id) > 1) {
 				$args['Name'] = 'Bulk translation – ' . date('H:i jS M');
@@ -400,13 +403,15 @@ class Polylang_SDL_API {
 			update_option('sdl_translations_inprogress', $inprogress);
 			foreach($id as $post) {
 				$post_model = new Polylang_SDL_Model;
-				$post_model->add_in_progress($post, $args['ProjectOptionsID']);
+				$map = $post_model->add_in_progress($post, $args['Files'][0]['targets'][0], $args['ProjectOptionsID']);
+				var_dump($map);
 			}
 			$reply = array('translation_success' => count( $id ));
 		}
 		else {
 			$reply = array('translation_error' => 'API error ' . $response);
 		}
+		return $reply;
 	}
 	public function translation_download($id) {
 		$args = array(
