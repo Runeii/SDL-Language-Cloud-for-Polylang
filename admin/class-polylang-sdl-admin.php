@@ -20,7 +20,7 @@ class Polylang_SDL_Admin {
 			$this->polylang_sdl = $polylang_sdl;
 			$this->version = $version;
 			$this->register_interface();
-
+			$polylang = new Polylang;
 			new Polylang_SDL_Polylang_Integration;
 
 			add_action( 'current_screen', 'check_current_screen' ); 
@@ -72,9 +72,9 @@ class Polylang_SDL_Admin {
             $options = $API->user_options();
         }
         $available_pairs = get_site_option('sdl_settings_projectoptions_pairs');
-
         $selector .= '<select name="sdl_settings_projectoption">';
         $selector .= '<option>– Select project options set –</option>';
+        $count = 0;
         foreach($options as $option){
             if(in_array($lang, $available_pairs[$option['Id']]['Source'])) {
                 if($option['Id'] === $existing_id) {
@@ -82,9 +82,13 @@ class Polylang_SDL_Admin {
                 } else {
                     $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
                 }
+                $count++;
             }
         }
         $selector .= '</select>';
+        if($count == 0) {
+        	$selector .= '<p style="font-style:italic">Error: no project option sets include current WordPress locale ('. $lang .') as a source language</p>';
+        }
         return $selector;
 	}
 }
