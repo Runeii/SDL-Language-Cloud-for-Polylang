@@ -10,6 +10,9 @@ class Polylang_SDL_Admin_Panel {
     public function __construct($parent){
         $this->parent = $parent;
         $this->API = new Polylang_SDL_API(true);
+        if(isset($_GET['override'])) {
+            $_POST['action'] =  $_GET['action'];
+        }
         if(isset($_POST['action'])) {
             $this->process_action();
         }
@@ -37,6 +40,12 @@ class Polylang_SDL_Admin_Panel {
                 break;
             case 'sdl_create_project':
                 $this->action_create_project();
+                break;
+            case 'sdl_update_single':
+                $this->action_update_single();
+                break;
+            case 'sdl_update_all':
+                $this->action_update_all();
                 break;
             case 'sdl_admin_updateoptions':
                 $blog_id = intval( $_POST['blog_id'] );
@@ -217,7 +226,7 @@ class Polylang_SDL_Admin_Panel {
             $SrcLang = array();
             foreach($ids as $id) {
                 $description .= '- ' . get_the_title($id) . '&#013;';
-                $lang = pll_get_post_language($id);
+                $lang = sdl_get_post_language($id);
                 if($lang != false && !array_key_exists($lang, $SrcLang)) {
                     $SrcLang[] = $lang;
                 }
@@ -225,7 +234,7 @@ class Polylang_SDL_Admin_Panel {
         } else {
             $name = get_the_title($ids[0]);
             $description = 'Project created ' . date('d/m/y');
-            $SrcLang = pll_get_post_language($ids[0]);
+            $SrcLang = sdl_get_post_language($ids[0]);
         }
         if($this->is_SDL_manager()) {
             $PIDs = get_site_option('sdl_settings_projectoptions_all');
@@ -297,7 +306,6 @@ class Polylang_SDL_Admin_Panel {
                             } 
                             echo '</select>';
                         }
-                        echo '<p class="description">Each project may only translate from <strong>one</strong> source language</p>';
                     echo '</td>';
             echo '</tr>';
             echo '<tr>';
@@ -336,16 +344,65 @@ class Polylang_SDL_Admin_Panel {
             echo '</table>';
         echo '</form>';
     }
+    private function action_update_single(){
+        $args = array(
+            'ProjectOptionsID' => $_GET['project_options'],
+            'SrcLang' => $_GET['src_lang'],
+            'Targets' => array($_GET['target_lang'])
+        );
+        $response = $this->API->translation_create($_GET['src_id'], $args);
+
+        if($response['key'] == 'translation_success') {
+            $reply = array('key' => 'update_success', 'value' => 1);
+        } else {
+            $reply = array('key' => 'update_error', 'value' => $response['value']);
+        }
+        if(isset($_POST['redirect_to'])) {
+            wp_redirect(
+                add_query_arg(
+                    $reply, 
+                    $_GET['redirect_to']
+                )
+            );    
+        }
+    }
+    /*
+        public function post_screen_functions(){
+        global $my_admin_page;
+        $screen = get_current_screen();
+        if(isset($_POST['sdl_button_update_translation'])) {
+            $id = $_POST['sdl_id'];
+            $source_map = $this->post_model->get_source_map($id);
+            $self_map = $this->post_model->get_details($id);
+            $args = array(
+                    'ProjectOptionsID' => $self_map['produced_by'],
+                    'SrcLang' => $source_map['parent']['locale'],
+                    'Targets' => array($_POST['target'])
+                );
+
+            $api = new Polylang_SDL_API;
+            $response = $api->translation_create(array($source_map['parent']['id']), $args);
+            if(is_array($response)) {
+                add_action( 'admin_notices', array($this, 'sdl_notice_update_success'), 10, 2 );
+                add_settings_error('managedtranslation', 'update', 'Successfully requested translations update via SDL Managed Translation', 'updated');    
+            } else {
+                // TODO: Return error message
+                add_action( 'admin_notices', array($this, 'sdl_notice_update_failed'), 10, 2 );
+                add_settings_error('managedtranslation', 'update', 'Failed to send posts for update via SDL Managed Translation', 'error');
+            }
+        }
+        if ( $screen->id == 'post' && pll_is_translated_post_type( $screen->post_type ) ){
+            add_action( 'add_meta_boxes', array($this, 'update_existing_translations'), 10, 2 );
+        }
+    }
+*/
     private function action_create_project_quick($id){
         $args = array(
             'ProjectOptionsID' => get_option('sdl_settings_projectoption'),
             'SrcLang' => strtolower(get_option('sdl_settings_projectoptions_sourcelang')),
-            'Targets' => array(pll_get_post_language($id, 'locale'))
+            'Targets' => array(sdl_get_post_language($id, 'locale'))
         );
-
-        $this->api = new Polylang_SDL_API;
-
-        $response = $api->translation_create($args);
+        $response = $this->API->translation_create($id, $args);
         if(is_array($response)) {
             return array('key' => 'translation_success', 'value' => count( $id ));
         } else {
@@ -393,6 +450,8 @@ class Polylang_SDL_Admin_Panel {
                 delete_site_option($option);
             }
         }
+        $pairs = get_site_option('sdl_settings_projectoptions_pairs');
+        update_option('sdl_settings_projectoptions_sourcelang', strtolower($pairs[$_POST['sdl_settings_projectoption']]['Source'][0]));
     }
 }
 ?>
