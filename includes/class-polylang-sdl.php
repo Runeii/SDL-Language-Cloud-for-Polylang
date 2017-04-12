@@ -117,6 +117,11 @@ class Polylang_SDL {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-unpacker.php';
 
 		/**
+		 * The class responsible for handling admin side actions
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-polylang-sdl-admin-actions.php';
+
+		/**
 		 * The class responsible for working with the SDL API.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-polylang-sdl-api.php';

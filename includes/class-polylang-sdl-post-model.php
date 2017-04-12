@@ -1,17 +1,16 @@
 <?php
 class Polylang_SDL_Model {
 
-	private $verbose;
+	private $verbose = false;
 	private $map;
 	private $parent_id;
 	private $syslangs;
 
-	public function __construct($id = null, $verbose = false){
-		$this->verbose = $verbose; 
+	public function __construct($id = null){
     	$this->syslangs = pll_languages_list();
         if($id != null) {
 			$this->get_source_id($id);
-			$this->get_map($this->parent_id);   	
+			$this->get_map($this->parent_id);   
         }
 	}
 
@@ -67,8 +66,9 @@ class Polylang_SDL_Model {
 		} else {
 			$lang = sdl_get_post_language($id);
 			$map['children'][$lang][$detail] = $value;
-		}		
-		update_post_meta($this->parent_id, '_sdl_translation_map', $map);
+		}
+
+		$this->sync_all($id, $map);
 		return true;
 	}
 	public function get_old($id = null){
@@ -76,7 +76,7 @@ class Polylang_SDL_Model {
 			$id = $this->parent_id;
 		}
 		if($this->map == null) {
-			$this->map = $this->get_map($this->id);
+			$this->map = $this->get_map($id);
 		}
 
 		$old = array();
@@ -110,14 +110,14 @@ class Polylang_SDL_Model {
 			$this->map = $this->add_child_map($id, $target, $options_set);
 			$this->verbose('Added to post map', $this->map);
 		}
-		update_post_meta($this->parent_id, '_sdl_translation_map', $this->map);
+		$this->sync_all($id, $this->map);
 		return $this->map;
 	}
 	public function add_in_progress($id, $target, $options_set){
 		$this->map = $this->get_source_map($id);
 		$target = explode('-', $target)[0];
 		$this->map['in_progress'][$target] = $options_set;
-		update_post_meta($this->parent_id, '_sdl_translation_map', $this->map);
+		$this->sync_all($id, $this->map);
 		return $this->map;
 	}
 	public function process_in_progress($id){
@@ -129,7 +129,7 @@ class Polylang_SDL_Model {
 		$this->map = $this->add_to_map($id, $options_set);
 		unset($this->map['in_progress'][$lang]);
 
-		update_post_meta($this->parent_id, '_sdl_translation_map', $this->map);
+		$this->sync_all($id, $this->map);
 		return $this->map;
 	}
 
@@ -160,7 +160,6 @@ class Polylang_SDL_Model {
 		foreach($languages as $lang => $post) {
 			if($post != $id) {
 				if(is_int($post)) {
-					echo $post;
 					$this->add_child_map($post, $lang);
 				} else {
 					$this->map['children'][$lang] = null;
@@ -185,12 +184,14 @@ class Polylang_SDL_Model {
 		return $map;
 	}
 	private function add_child_map($child_id, $child_lang, $options_set = null){
-		$this->map['children'][$child_lang] = array(
-			'id' => $child_id,
-			'lang' => $child_lang,
-			'locale' => format_locale(sdl_get_post_language($child_id, 'locale')),
-			'updated' => get_the_modified_date('U', $child_id)
-		);
+		if(!is_array($this->map['children'][$child_lang])) {
+			$this->map['children'][$child_lang] = array();
+		}
+		$this->map['children'][$child_lang]['id'] = $child_id;
+		$this->map['children'][$child_lang]['lang'] = $child_lang;
+		$this->map['children'][$child_lang]['locale'] = format_locale(sdl_get_post_language($child_id, 'locale'));
+		$this->map['children'][$child_lang]['updated'] = get_the_modified_date('U', $child_id);
+
 		if($options_set != null) {
 			$this->map['children'][$child_lang]['produced_by'] = $options_set;
 		}
@@ -204,6 +205,20 @@ class Polylang_SDL_Model {
             $results[$lang] = pll_get_post($post_id, $lang);
         }
         return $results;
+    }
+
+    private function sync_all($post_id, $map) {
+		$this->parent_id = $this->get_source_id($post_id);
+		$this->verbose('About to start syncing this map: ', $map);
+		update_post_meta($this->parent_id, '_sdl_translation_map', $map);
+		if(is_array($map['children'])) {
+			foreach($map['children'] as $lang) {
+				if($lang != null && is_array($lang)) {
+					update_post_meta($lang['id'], '_sdl_translation_map', $map);
+				}
+			}
+		}
+		return true;
     }
 }
 

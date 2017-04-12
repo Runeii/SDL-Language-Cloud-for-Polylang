@@ -404,7 +404,6 @@ class Polylang_SDL_API {
 			foreach($id as $post) {
 				$post_model = new Polylang_SDL_Model;
 				$map = $post_model->add_in_progress($post, $args['Files'][0]['targets'][0], $args['ProjectOptionsID']);
-				var_dump($map);
 			}
 			$reply = array('translation_success' => count( $id ));
 		}

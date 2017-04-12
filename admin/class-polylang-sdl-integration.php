@@ -17,27 +17,6 @@ class Polylang_SDL_Polylang_Integration {
 	public function post_screen_functions(){
 		global $my_admin_page;
 		$screen = get_current_screen();
-		if(isset($_POST['sdl_button_update_translation'])) {
-			$id = $_POST['sdl_id'];
-			$source_map = $this->post_model->get_source_map($id);
-			$self_map = $this->post_model->get_details($id);
-			$args = array(
-					'ProjectOptionsID' => $self_map['produced_by'],
-					'SrcLang' => $source_map['parent']['locale'],
-					'Targets' => array($_POST['target'])
-				);
-
-			$api = new Polylang_SDL_API;
-			$response = $api->translation_create(array($source_map['parent']['id']), $args);
-			if(is_array($response)) {
-				add_action( 'admin_notices', array($this, 'sdl_notice_update_success'), 10, 2 );
-				add_settings_error('managedtranslation', 'update', 'Successfully requested translations update via SDL Managed Translation', 'updated');	
-			} else {
-				// TODO: Return error message
-				add_action( 'admin_notices', array($this, 'sdl_notice_update_failed'), 10, 2 );
-				add_settings_error('managedtranslation', 'update', 'Failed to send posts for update via SDL Managed Translation', 'error');
-			}
-		}
 		if ( $screen->id == 'post' && pll_is_translated_post_type( $screen->post_type ) ){
 			add_action( 'add_meta_boxes', array($this, 'update_existing_translations'), 10, 2 );
 		}
@@ -46,30 +25,25 @@ class Polylang_SDL_Polylang_Integration {
 		$source_id = $this->post_model->get_source_id($post->ID);
 		$out_of_date = $this->post_model->get_old($post->ID);
 		$lang = sdl_get_post_language($post->ID);
-		if($source_id != $post->ID && is_array($out_of_date) && in_array($lang, $out_of_date)) {
+		if($source_id != $post->ID && is_array($out_of_date) && array_key_exists($lang, $out_of_date) && $out_of_date[$lang]['id'] == $post->ID) {
 			add_meta_box('sdl_update_post', 'Update translation', array($this, 'update_existing_translations_box'), $post_type, 'side', 'high');
 		}
 	}
 	public function update_existing_translations_box(){
 		$post_id = get_the_ID();
+		$map = $this->post_model->get_source_map($post_id);
+		$details = $this->post_model->get_details($post_id, $map);
 		print __('This translation is now out of date.', 'managedtranslation');
 		echo '<br /><br />';
-		echo '<input type="hidden" name="sdl_id" value="'. $post_id .'" />
-				<input type="hidden" name="target" value="'. sdl_get_post_language($post_id) .'" />
-				<button class="button button-primary" name="sdl_button_update_translation">Update translation now</button>';
-	}
-	public function supported_project_options(){
-		
-	}
-	public function sdl_notice_update_success(){
-		echo '<div class="notice notice-success is-dismissible">
-			        <p>'. __( 'Successfully requested translation update via SDL Managed Translation', 'managedtranslation' ) .'</p>
-			    </div>';
-	}
-	public function sdl_notice_update_failed(){
-		echo '<div class="notice notice-error is-dismissible">
-	        <p>'. __( 'Failed to send translations for update via SDL Managed Translation', 'managedtranslation' ) .'</p>
-	    </div>';
+		$args = array(
+			'action' => 'sdl_update_single',
+			'src_id' => $map['parent']['id'],
+			'src_lang' => $map['parent']['locale'],
+			'target_lang' => $details['locale'],
+			'project_options' => $details['produced_by'],
+			'redirect_to' => admin_url('edit.php')
+			);
+		echo '<a class="button button-primary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update translation</a>';
 	}
 	public function sdl_manage_languages($lang, $mode = 'add'){
 		//Polylang doesn't offer a hook or function for directly interacting with languages, so this is a bit of a hack job
@@ -86,6 +60,17 @@ class Polylang_SDL_Polylang_Integration {
 			$polylang_options = get_site_option('polylang', true);
 			$polylang_settings = new PLL_Admin_Model($polylang_options);
 			$polylang_settings->add_language( $args );
+
+			if ( ! isset( $polylang_options['default_lang'] ) ) {
+				// If this is the first language created, set it as default language
+				$polylang_options['default_lang'] = $args['slug'];
+				update_site_option( 'polylang', $polylang_options );
+
+				// And assign default language to default category
+				$polylang_settings->term->set_language( (int) get_option( 'default_category' ), (int) $r['term_id'] );
+			} elseif ( empty( $args['no_default_cat'] ) ) {
+				$polylang_settings->create_default_category( $args['slug'] );
+			}
 		}
 	}
 }

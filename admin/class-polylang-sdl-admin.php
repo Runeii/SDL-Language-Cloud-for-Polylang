@@ -22,6 +22,7 @@ class Polylang_SDL_Admin {
 			$this->register_interface();
 			$polylang = new Polylang;
 			new Polylang_SDL_Polylang_Integration;
+   			new Polylang_SDL_Admin_Actions();
 
 			add_action( 'current_screen', 'check_current_screen' ); 
 			function check_current_screen(){
@@ -91,6 +92,13 @@ class Polylang_SDL_Admin {
         }
         return $selector;
 	}
+}
+
+add_action( 'wp_ajax_sdl_get_options', 'sdl_get_options' );
+function sdl_get_options() {
+	global $wpdb;
+	echo JSON_encode( get_site_option('sdl_settings_projectoptions_pairs') );
+	wp_die();
 }
 
 ?>
