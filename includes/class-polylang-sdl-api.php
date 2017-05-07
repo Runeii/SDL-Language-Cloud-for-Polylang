@@ -9,18 +9,18 @@ class Polylang_SDL_API {
 
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');
-		$this->password = $password ?: get_site_option('sdl_settings_account_password');
+			$this->password = $password ?: get_site_option('sdl_settings_account_password');
     	if($this->password != null && $password === null) {
-			$this->password = $this->decrypt($this->password);
+				$this->password = $this->decrypt($this->password);
     	}
-		$this->authtoken = get_site_option('sdl_authtoken');
-		//While working offline, going to completely disable this section
-		//See also loggedin test, below
-		
-		if($test === false){
-			$this->verbose('This is not a test.');
-			$this->connect_authtoken();
-		}
+			$this->authtoken = get_site_option('sdl_authtoken');
+			//While working offline, going to completely disable this section
+			//See also loggedin test, below
+
+			if($test === false){
+				$this->verbose('This is not a test.');
+				$this->connect_authtoken();
+			}
     }
     public function verbose($msg, $array = null) {
     	if($this->verbose === true) {
@@ -59,7 +59,7 @@ class Polylang_SDL_API {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, array(
 			  'Content-Type: application/x-www-form-urlencoded',
 			  'Expect:'
-			));	
+			));
 		} else {
 			curl_setopt($curl, CURLOPT_HTTPHEADER, array(
 				'Authorization: Bearer ' . $this->connect_authtoken()
@@ -72,7 +72,7 @@ class Polylang_SDL_API {
 		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 	    curl_close($curl);
 	    $response = json_decode($result, true);
-		if($httpcode == '200') { 
+		if($httpcode == '200') {
 			return $response;
 		} else {
 			$this->verbose('Call failed. HTTP code: '. $httpcode);
@@ -82,7 +82,7 @@ class Polylang_SDL_API {
 	public function callJSON($url, $data) {
 	    $curl = curl_init();
 	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-	    
+
 	    curl_setopt($curl, CURLOPT_POST, 1);
 		curl_setopt($curl, CURLOPT_POSTFIELDS, JSON_encode($data));
 
@@ -96,24 +96,26 @@ class Polylang_SDL_API {
 		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 	    curl_close($curl);
 	    $response = json_decode($result, true);
-		if($httpcode == '200') { 
+		if($httpcode == '200') {
 			return $response;
 		} else {
 			$this->verbose('JSON call failed. HTTP code: '. $httpcode . '. ', $response);
 			return $httpcode;
 		}
 	}
+
+	//$response = $this->download('/projects/'. $id . '/zip', $args, $id, $folder);
 	public function download($url, $data = false, $name, $where) {
 		set_time_limit(0);
-	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-	    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
-	    $curl = curl_init($streamurl);
+    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
+    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
+    $curl = curl_init($streamurl);
 		$this->verbose('Stream URL: '. $streamurl);
-	    $output = $where . $name . '.zip';
-    	if(file_exists($output)) {
+    $output = $where . $name . '.zip';
+  	if(file_exists($output)) {
 			$this->verbose("File exists, deleting:". $output);
-    		unlink($output);
-    	}
+  		unlink($output);
+  	}
 		$file = fopen ($output, 'w+');
 		$this->verbose("Downloading to:". $output);
 
@@ -122,14 +124,14 @@ class Polylang_SDL_API {
 		  'Content-Type: application/x-www-form-urlencoded'
 		));
 		curl_setopt($curl, CURLOPT_TIMEOUT, 50);
-		curl_setopt($curl, CURLOPT_FILE, $file); 
+		curl_setopt($curl, CURLOPT_FILE, $file);
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_exec($curl); 
+		curl_exec($curl);
 		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
 		curl_close($curl);
 		fclose($file);
-		if($httpcode == '200') { 
+		if($httpcode == '200') {
 			return $output;
 		} else {
 			$this->verbose($httpcode . ": Couldn't download project zip.");
@@ -182,12 +184,12 @@ class Polylang_SDL_API {
 	// User testing functions
 	*/
 	public function test_loggedIn(){
-		
+
 		if($this->connect_checkExpired()) {
 			return $this->testCredentials();
 		} else {
 			return true;
-		} 
+		}
 		return true;
 	}
 	private function testCredentials(){
@@ -337,11 +339,11 @@ class Polylang_SDL_API {
 				'Description' => 'The project is ready for vendor selection.'
 				)
 			);
-		if($value === null) { 
+		if($value === null) {
 			return $codes[$code];
 		} else {
 			return $codes[$code][$value];
-		} 
+		}
 	}
 	/*
 	// Translation
@@ -369,7 +371,7 @@ class Polylang_SDL_API {
 		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		curl_close ($curl);
 	    $response = json_decode($result, true);
-		if($httpcode == '201') { 
+		if($httpcode == '201') {
 			return $response;
 		} else {
 			$this->verbose('Upload failed. HTTP code: '. $httpcode);
@@ -388,7 +390,7 @@ class Polylang_SDL_API {
 				$args['Name'] = 'Bulk translation – ' . date('H:i jS M');
 			} else {
 				$args['Name'] = get_the_title($id[0]);
-			}	
+			}
 		}
 		$convertor = new Polylang_SDL_Create_XLIFF;
 		$args['Files'] = $convertor->package_post($id, $args);
@@ -417,8 +419,8 @@ class Polylang_SDL_API {
 			'projectId' => $id,
 			'types' => 'TargetFiles'
 		);
-	    $SDL_Files = new Polylang_SDL_Files();
-	    $folder = $SDL_Files->getFolder('received');
+    $SDL_Files = new Polylang_SDL_Files();
+    $folder = $SDL_Files->getFolder('received');
 		$response = $this->download('/projects/'. $id . '/zip', $args, $id, $folder);
 		if(!$response) {
 			return false;
@@ -437,7 +439,7 @@ class Polylang_SDL_API {
 	    $secret_key = wp_salt();
 	    $secret_iv = 'managedtranslation';
 	    $key = hash('sha256', $secret_key);
-	    
+
 	    // iv - encrypt method AES-256-CBC expects 16 bytes - else you will get a warning
 	    $iv = substr(hash('sha256', $secret_iv), 0, 16);
 

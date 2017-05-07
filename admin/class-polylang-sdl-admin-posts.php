@@ -76,8 +76,8 @@ class Polylang_SDL_Admin_Posts {
 		        'managedtranslation'
 		      ) . '</div>', $emailed_count );
 	  	} else if ( ! empty( $_REQUEST['translation_error'] ) ) {
-		    print( '<div id="message" class="updated fade">' . 
-		    	__( 'Translation failed: ' . $_REQUEST['translation_error'], 'managedtranslation') . 
+		    print( '<div id="message" class="updated fade">' .
+		    	__( 'Translation failed: ' . $_REQUEST['translation_error'], 'managedtranslation') .
 		    	'</div>' );
 	  	} else if ( ! empty( $_REQUEST['update_success'] ) ) {
 		    $updated_count = intval( $_REQUEST['update_success'] );
@@ -88,8 +88,8 @@ class Polylang_SDL_Admin_Posts {
 		        'managedtranslation'
 		      ) . '</div>', $updated_count );
 	  	} else if ( ! empty( $_REQUEST['update_error'] ) ) {
-		    print( '<div id="message" class="updated fade">' . 
-		    	__( 'Translation update failed: ' . $_REQUEST['update_error'], 'managedtranslation') . 
+		    print( '<div id="message" class="updated fade">' .
+		    	__( 'Translation update failed: ' . $_REQUEST['update_error'], 'managedtranslation') .
 		    	'</div>' );
 	  	} else if ( ! empty( $_REQUEST['update_success_total'] ) ) {
 		    $updated_count = intval( $_REQUEST['update_success'] );
@@ -100,8 +100,8 @@ class Polylang_SDL_Admin_Posts {
 		        'managedtranslation'
 		      ) . '</div>', $updated_count );
 		} else if ( ! empty( $_REQUEST['update_error_total'] ) ) {
-		    print( '<div id="message" class="updated fade">' . 
-		    	__( 'Failed to send translations for update: ' . $_REQUEST['update_error_total'], 'managedtranslation') . 
+		    print( '<div id="message" class="updated fade">' .
+		    	__( 'Failed to send translations for update: ' . $_REQUEST['update_error_total'], 'managedtranslation') .
 		    	'</div>' );
 		} else if ( ! empty( $_REQUEST['update_success_partial'] ) ) {
 		    $updated_count = intval($_REQUEST['update_success_partial'][0]);
@@ -127,7 +127,7 @@ class Polylang_SDL_Admin_Posts {
 				array(
 					'page' => 'managedtranslation&tab=create_project',
 					'override' => '1',
-					'posts' => $sanitised_ids), 
+					'posts' => $sanitised_ids),
 				admin_url('admin.php')
 			)
 		);
@@ -143,11 +143,11 @@ class Polylang_SDL_Admin_Posts {
 				$map = $this->post_model->get_source_map($post_id);
 				$details = $this->post_model->get_details($post_id, $map);
 				$out_of_date = $this->post_model->get_old($post_id);
-				if(count($map['children']) > 0 && array_filter($map['children'])) {
+				if(count($map['children']) > 0 && (array_filter($map['children']) || count($map['in_progress']))) {
 					if(	is_array($map['in_progress']) && count($map['in_progress']) > 0 &&
 							(array_key_exists($details['lang'], $map['in_progress']) || $post_id == $map['parent']['id'])
 						) {
-						echo '<button class="button button-secondary" disabled >Translation in progress</button>';	
+						echo '<button class="button button-secondary" disabled >Translation in progress</button>';
 					} elseif(is_array($out_of_date) && array_key_exists($details['lang'], $out_of_date)) {
 						$args = array(
 							'action' => 'sdl_update_single',
@@ -167,10 +167,10 @@ class Polylang_SDL_Admin_Posts {
 							);
 						echo '<a class="button button-primary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update all Translations</a>';
 					}  elseif($post_id != $map['parent']['id']) {
-						echo '<button class="button delete" disabled>Up to date</button>';		
+						echo '<button class="button delete" disabled>Up to date</button>';
 					} elseif($post_id == $map['parent']['id']) {
-						echo '<button class="button delete" disabled>Translations up to date</button>';		
-					}	
+						echo '<button class="button delete" disabled>Translations up to date</button>';
+					}
 				}
 			break;
 		}

@@ -10,7 +10,7 @@ class Polylang_SDL_Polylang_Integration {
 	public function flag_existing_translations($post_ID, $post_after, $post_before){
 		$source_id = $this->post_model->get_source_id($post_ID);
 		if($source_id == $post_ID) {
-			$this->post_model->update_details($post_ID, 'updated', get_the_modified_date('U', $post));
+			$this->post_model->update_details($post_ID, 'updated', get_the_modified_date('U', $post_ID));
 		}
 		return true;
 	}

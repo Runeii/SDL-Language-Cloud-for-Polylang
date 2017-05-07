@@ -15,7 +15,7 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-//By default, hourly is the smallest interval available to WP-CRON. We add a custom one here 
+//By default, hourly is the smallest interval available to WP-CRON. We add a custom one here
 add_filter('cron_schedules', 'custom_scheduled_interval');
 function custom_scheduled_interval($schedules) {
 	$schedules['15minutes'] = array('interval'=>900, 'display'=>__('Once every 15 minutes'));
@@ -28,6 +28,7 @@ function activate_polylang_sdl() {
 }
 
 function deactivate_polylang_sdl() {
+	error_log('SDL: Removing CRON event', 0);
 	wp_clear_scheduled_hook('poll_projects');
 }
 
@@ -55,6 +56,7 @@ function run_polylang_sdl() {
 	$plugin->run();
 
 	if (! wp_next_scheduled ( 'poll_projects' )) {
+		error_log('SDL: Adding CRON event', 0);
 		wp_schedule_event(time(), '15minutes', 'poll_projects');
 	}
 }
@@ -72,31 +74,39 @@ function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
 	$api = new Polylang_SDL_API;
 	//Test if anything is in progress
+	error_log('SDL: Polling for project updates', 0);
 	if(is_array($inprogress) && sizeof($inprogress) > 0) {
+		error_log('SDL: Currently ' . sizeof($inprogress) . ' in progress', 0);
 		foreach($inprogress as $project) {
+			error_log('SDL: Looking up '. $project, 0);
 			$status = $api->project_getStatusCode($project);
 			//Test if any are now listed as complete
+			error_log('SDL: Current status code ' . $status, 0);
 			if($status == 3 || $status == 4 || $status == 5) {
 				$file = $api->translation_download($project);
-				//Test that the download was successful 
+				//Test that the download was successful
 				if($file) {
+					error_log('SDL: Download successful', 0);
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
 					$posts = $unpack->convert($project);
 					//Test that we successfull converted the XLIFF
 					if(is_array($posts)) {
+						error_log('SDL: Converted successfully', 0);
 						$convertor = new Polylang_SDL_Local;
 						foreach($posts as $post) {
 							$saved_id = $convertor->save_post_translation($post);
 							$post_model = new Polylang_SDL_Model;
 							$post_model->process_in_progress($saved_id);
+							error_log('SDL: Processed' . $saved_id, 0);
 						}
+						error_log('SDL: Posts saved', 0);
 						//An update could have happened while saving, so let's refresh the array
 						$latest = get_option('sdl_translations_inprogress');
 						unset($latest[$project]);
 						$api->verbose('Remaining in progress: ', array_diff($latest, [$project]));
 						update_option('sdl_translations_inprogress', array_diff($latest, [$project]));
 						$response = $api->project_updateStatus($project, 'complete');
-					} 
+					}
 				}
 			}
 		}
@@ -126,7 +136,7 @@ function get_formatted_locale($blog_id = null) {
 		$site_lang = get_locale();
 	} else {
 		$network_lang = get_site_option('WPLANG');
-		$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);	
+		$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);
 	}
 	return format_locale($site_lang);
 }
