@@ -51,27 +51,41 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-polylang-sdl.php';
  * @since    1.0.0
  */
 function run_polylang_sdl() {
+	if(class_exists('Polylang')) {
+		$plugin = new Polylang_SDL();
+		$plugin->run();
 
-	$plugin = new Polylang_SDL();
-	$plugin->run();
-
-	if (! wp_next_scheduled ( 'poll_projects' )) {
-		error_log('SDL: Adding CRON event', 0);
-		wp_schedule_event(time(), '15minutes', 'poll_projects');
+		if (! wp_next_scheduled ( 'poll_projects' )) {
+			error_log('SDL: Adding CRON event', 0);
+			wp_schedule_event(time(), '15minutes', 'poll_projects');
+		}
 	}
 }
 add_action('plugins_loaded', 'run_polylang_sdl');
 
 function test_dependencies()
 {
+	if ( ! function_exists( 'deactivate_plugins' ) ) {
+		require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+	}
 	if(!class_exists('Polylang')) {
 		deactivate_plugins( plugin_basename( __FILE__) );
+		wp_die( __( 'Please install and activate Polylang before enabling SDL Managed Translation plugin.', 'managedtranslation' ), 'Plugin dependency check', array( 'back_link' => true ) );
+	}
+	if(!function_exists('pll_languages_list')) {
+		deactivate_plugins( plugin_basename( __FILE__) );
+		wp_die( __( 'Polylang installation is corrupted, or an incompatible version.', 'managedtranslation' ), 'Plugin dependency check', array( 'back_link' => true ) );
+	}
+	if (!is_plugin_active_for_network( plugin_basename(__FILE__)) ) {
+		deactivate_plugins( plugin_basename( __FILE__) );
+		wp_die( __( 'Multisite setup detected. Please activate plugin via Network administration screen.', 'managedtranslation' ), 'Plugin scope check', array( 'back_link' => true ) );
 	}
 }
 add_action('admin_init', 'test_dependencies');
 
 function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
+	var_dump($inprogress);
 	$api = new Polylang_SDL_API;
 	//Test if anything is in progress
 	error_log('SDL: Polling for project updates', 0);
@@ -85,6 +99,7 @@ function sdl_poll_projects(){
 			if($status == 3 || $status == 4 || $status == 5) {
 				$file = $api->translation_download($project);
 				//Test that the download was successful
+				var_dump($file);
 				if($file) {
 					error_log('SDL: Download successful', 0);
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
@@ -100,6 +115,7 @@ function sdl_poll_projects(){
 							error_log('SDL: Processed' . $saved_id, 0);
 						}
 						error_log('SDL: Posts saved', 0);
+
 						//An update could have happened while saving, so let's refresh the array
 						$latest = get_option('sdl_translations_inprogress');
 						unset($latest[$project]);
@@ -120,11 +136,6 @@ function sdl_get_post_language($id = null, $option = 'slug'){
 	$lang = pll_get_post_language($id, $option);
 	if($lang == '' || $lang == false || $lang == null) {
 		$lang = pll_current_language();
-		if($lang == '' || $lang == false || $lang == null) {
-			$integrator = new Polylang_SDL_Polylang_Integration;
-			$locale = get_locale();
-			$integrator->sdl_manage_languages($locale, 'add');
-		}
 		pll_set_post_language($id, $lang);
 		$lang = pll_get_post_language($id, $option);
 	}
@@ -136,7 +147,10 @@ function get_formatted_locale($blog_id = null) {
 		$site_lang = get_locale();
 	} else {
 		$network_lang = get_site_option('WPLANG');
-		$site_lang = get_blog_option($blog_id, 'WPLANG', $network_lang);
+		$site_lang = get_blog_option($blog_id, 'WPLANG');
+		if($site_lang == '' || $site_lang == null) {
+			$site_lang = $network_lang;
+		}
 	}
 	return format_locale($site_lang);
 }

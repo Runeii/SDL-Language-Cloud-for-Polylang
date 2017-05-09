@@ -39,3 +39,6 @@
     width:100%;
     line-height: 20px;
 }
+.toplevel_page_managedtranslation-network button:active {
+  transform:translateY(-50%) !important;
+}

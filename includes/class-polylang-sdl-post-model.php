@@ -7,11 +7,15 @@ class Polylang_SDL_Model {
 	private $syslangs;
 
 	public function __construct($id = null){
+		if(function_exists('pll_languages_list')) {
     	$this->syslangs = pll_languages_list();
-        if($id != null) {
+		} else {
+			$this->syslangs = null;
+		}
+    if($id != null) {
 			$this->get_source_id($id);
-			$this->get_map($this->parent_id);   
-        }
+			$this->get_map($this->parent_id);
+    }
 	}
 
     private function verbose($msg, $array = null) {
@@ -44,7 +48,7 @@ class Polylang_SDL_Model {
 	public function get_details($id, $map = null){
 		$this->parent_id = $this->get_source_id($id);
 		if($map == null) {
-			$map = $this->get_map($this->parent_id);	
+			$map = $this->get_map($this->parent_id);
 		}
 		if($this->parent_id == $id) {
 			return $map['parent'];
@@ -67,7 +71,6 @@ class Polylang_SDL_Model {
 			$lang = sdl_get_post_language($id);
 			$map['children'][$lang][$detail] = $value;
 		}
-
 		$this->sync_all($id, $map);
 		return true;
 	}
@@ -102,7 +105,7 @@ class Polylang_SDL_Model {
 			foreach($this->map['children'] as $lang => $meta) {
 				if($meta['id'] == $id) {
 					$target = $meta['lang'];
-				} 
+				}
 			}
 			if($target == null){
 				$target = sdl_get_post_language($id);

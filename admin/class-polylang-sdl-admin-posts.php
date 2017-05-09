@@ -16,13 +16,19 @@ class Polylang_SDL_Admin_Posts {
 	private $option_name;
 	private $args;
 	private $api;
+	private $notice_message;
 
 	public function __construct() {
 		$this->api = new Polylang_SDL_API(true);
 		$this->post_model = new Polylang_SDL_Model;
 		if(is_admin() && $this->api->test_loggedIn()) {
-			add_filter( 'bulk_actions-edit-post', array($this, 'register_dropdowns') );
-			add_filter( 'handle_bulk_actions-edit-post', array($this, 'handle_dropdowns'), 10, 3 );
+			if(pll_languages_list() != null) {
+				add_filter( 'bulk_actions-edit-post', array($this, 'register_dropdowns') );
+				add_filter( 'handle_bulk_actions-edit-post', array($this, 'handle_dropdowns'), 10, 3 );
+			} else {
+				echo 'error';
+				$this->notice_message = 'no_language';
+			}
 			add_action( 'admin_notices', array($this, 'handle_dropdowns_notice') );
 			add_filter( 'manage_posts_columns', array($this, 'sdl_posts_translation_column') );
 			add_filter( 'manage_posts_custom_column', array($this, 'sdl_posts_translation_column_row'), 10, 2 );
@@ -67,7 +73,11 @@ class Polylang_SDL_Admin_Posts {
 	}
 
 	public function handle_dropdowns_notice() {
-	  	if ( ! empty( $_REQUEST['translation_success'] ) ) {
+		if ($this->notice_message == 'no_language') {
+			echo '<div id="message" class="error notice notice-error">
+							<h3>' . __( 'Warning', 'managedtranslation') . '</h3>
+							<p>' . __( 'No languages set up in Polylang. Please configure Polylang to enable SDL Managed Translation functionality.', 'managedtranslation') . '</p></div>';
+		} else if ( ! empty( $_REQUEST['translation_success'] ) ) {
 		    $emailed_count = intval( $_REQUEST['translation_success'] );
 		    printf( '<div id="message" class="updated fade">' .
 		      _n( 'Successfully sent %s post to the Managed Translation service for translation.',
@@ -134,7 +144,7 @@ class Polylang_SDL_Admin_Posts {
 		exit;
 	}
 	public function sdl_posts_translation_column( $columns ) {
-		$columns['sdl_translation'] = 'Managed Translation';
+		$columns['sdl_translation'] = 'SDL Managed Translation';
 	    return $columns;
 	}
 	public function sdl_posts_translation_column_row($column, $post_id) {

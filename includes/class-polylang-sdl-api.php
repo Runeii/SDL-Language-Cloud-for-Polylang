@@ -192,11 +192,14 @@ class Polylang_SDL_API {
 		}
 		return true;
 	}
-	private function testCredentials(){
+	public function testCredentials($u = null, $p = null){
+		$username = $u ?: $this->username;
+		$password = $p ?: $this->password;
+		
 		$args = array(
 			'grant_type' => 'password',
-			'username' => $this->username,
-			'password' => $this->password
+			'username' => $username,
+			'password' => $password
 			);
 		$response = $this->call('POST', '/auth/token', $args, true);
 		if(is_array($response)) {

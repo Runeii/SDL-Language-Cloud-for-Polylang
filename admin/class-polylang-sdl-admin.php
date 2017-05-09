@@ -14,6 +14,7 @@ class Polylang_SDL_Admin {
 	private $polylang_sdl;
 	private $version;
 	private $option_name;
+	public	$admin_actions;
 
 	public function __construct($polylang_sdl, $version) {
 		if(is_admin()) {
@@ -22,9 +23,9 @@ class Polylang_SDL_Admin {
 			$this->register_interface();
 			$polylang = new Polylang;
 			new Polylang_SDL_Polylang_Integration;
-   			new Polylang_SDL_Admin_Actions();
+   		$this->admin_actions = new Polylang_SDL_Admin_Actions();
 
-			add_action( 'current_screen', 'check_current_screen' ); 
+			add_action( 'current_screen', 'check_current_screen' );
 			function check_current_screen(){
 				if ( is_admin() ) {
 					$screen = get_current_screen();
@@ -52,9 +53,9 @@ class Polylang_SDL_Admin {
 		add_action('admin_menu', array($this, 'sdl_register_menu'));
 		add_action('network_admin_menu', array($this, 'sdl_register_menu'));
 	}
-	
+
 	public function sdl_register_menu(){
-		add_menu_page('SDL Managed Translation settings', __( 'Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
+		add_menu_page('SDL Managed Translation settings', __( 'SDL Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
 	}
 
 	public function sdl_create_page(){
@@ -66,31 +67,32 @@ class Polylang_SDL_Admin {
 		} else {
 			$existing_id = get_blog_option($blog, 'sdl_settings_projectoption', '0');
 		}
-	    $lang = get_formatted_locale($blog);
-	    $options = get_site_option('sdl_settings_projectoptions_all');
-        if($options === null || $options === false) {
-            $API = new Polylang_SDL_API();
-            $options = $API->user_options();
-        }
-        $available_pairs = get_site_option('sdl_settings_projectoptions_pairs');
-        $selector .= '<select name="sdl_settings_projectoption">';
-        $selector .= '<option>– Select project options set –</option>';
-        $count = 0;
-        foreach($options as $option){
-            if(in_array($lang, $available_pairs[$option['Id']]['Source'])) {
-                if($option['Id'] === $existing_id) {
-                    $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
-                } else {
-                    $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
-                }
-                $count++;
+    $lang = get_formatted_locale($blog);
+    $options = get_site_option('sdl_settings_projectoptions_all');
+    if($options === null || $options === false) {
+        $API = new Polylang_SDL_API();
+        $options = $API->user_options();
+    }
+    $available_pairs = get_site_option('sdl_settings_projectoptions_pairs');
+		$selector = '';
+    $selector .= '<select name="sdl_settings_projectoption">';
+    $selector .= '<option>– Select project options set –</option>';
+    $count = 0;
+    foreach($options as $option){
+        if(in_array($lang, $available_pairs[$option['Id']]['Source'])) {
+            if($option['Id'] === $existing_id) {
+                $selector .= '<option value="'. $option['Id'] . '" selected="selected">' . $option['Name'] . '</option>';
+            } else {
+                $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
             }
+            $count++;
         }
-        $selector .= '</select>';
-        if($count == 0) {
-        	$selector .= '<p style="font-style:italic">Error: no project option sets include current WordPress locale ('. $lang .') as a source language</p>';
-        }
-        return $selector;
+    }
+    $selector .= '</select>';
+    if($count == 0) {
+    	$selector .= '<p style="font-style:italic">Error: no project option sets include current WordPress locale ('. $lang .') as a source language</p>';
+    }
+    return $selector;
 	}
 }
 

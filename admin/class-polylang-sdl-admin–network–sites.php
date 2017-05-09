@@ -9,19 +9,24 @@ class SDL_Sites_Table extends WP_List_Table
     private $pairs;
     private $Polylang;
     private $network_toggle;
+    private $parent;
 
+    public function __construct($parent) {
+      parent::__construct();
+      $this->parent = $parent;
+    }
     public function prepare_items()
     {
         $this->network_toggle = get_site_option('sdl_settings_networktoggle');
         echo '<form method="post" action="admin.php?page=managedtranslation" class="buttonform">';
         echo '<input type="hidden" name="action" value="sdl_admin_togglenetwork" />';
-        if($this->network_toggle === true || $this->network_toggle == 1) { 
+        if($this->network_toggle === true || $this->network_toggle == 1) {
             echo '<button class="button button-secondary">Enable Network-level management</button>';
         } else {
             echo '<button class="button button-primary">Disable Network-level management</button>';
         }
         echo '</form>';
-        if($this->network_toggle === true || $this->network_toggle == 1) { 
+        if($this->network_toggle === true || $this->network_toggle == 1) {
             die();
         };
         echo '<form method="post" action="admin.php?page=managedtranslation" class="buttonform">';
@@ -104,7 +109,7 @@ class SDL_Sites_Table extends WP_List_Table
     public function print_flags($langs){
         $translations = pll_languages_list();
         if($this->Polylang === null || $this->Polylang === false) {
-            $plugins = get_plugins(); 
+            $plugins = get_plugins();
             foreach($plugins as $key => $plugin) {
                 if($plugin['Name'] == 'Polylang') {
                     $folder = explode('/', $key);
@@ -125,11 +130,11 @@ class SDL_Sites_Table extends WP_List_Table
         return $output;
     }
     private function options_set($id){
-        $selector = '<form method="post" action="admin.php?page=managedtranslation">';
+        $selector = '<form method="post" name="set_'. $id .'" action="admin.php?page=managedtranslation">';
         $selector .= '<input type="hidden" name="action" value="sdl_admin_updateoptions" />';
         $selector .= '<input type="hidden" name="blog_id" value="'. $id . '" />';
-        $selector .= $this->parent->filter_project_options($site->blog_id);
-        $selector .= '<button class="button button-primary">Update</button>';
+        $selector .= $this->parent->filter_project_options($id);
+        $selector .= '<button class="button button-primary" type="submit" value="Submit">Update</button>';
         $selector .= '</form>';
         return $selector;
     }

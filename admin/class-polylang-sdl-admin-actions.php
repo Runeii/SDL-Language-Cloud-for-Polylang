@@ -1,12 +1,14 @@
-<?php  
+<?php
 
 class Polylang_SDL_Admin_Actions {
 
     private $verbose = false;
     private $API;
+    public $messages;
 
     public function __construct(){
         $this->API = new Polylang_SDL_API(true);
+        $this->messages = array();
         if(isset($_GET['override'])) {
             $_POST['action'] =  $_GET['action'];
         }
@@ -61,7 +63,7 @@ class Polylang_SDL_Admin_Actions {
                 } else {
                     update_site_option('sdl_settings_networktoggle', true);
                 }
-                break;   
+                break;
         }
     }
 
@@ -72,7 +74,7 @@ class Polylang_SDL_Admin_Actions {
             );
             $this->current_tab = $_GET['tab'];
         } else {
-            $this->register_tabs();   
+            $this->register_tabs();
             $this->set_default();
         }
         $this->display_page();
@@ -101,10 +103,10 @@ class Polylang_SDL_Admin_Actions {
         if(isset($_GET['redirect_to'])) {
             wp_redirect(
                 add_query_arg(
-                    $reply, 
+                    $reply,
                     $_GET['redirect_to']
                 )
-            );    
+            );
         }
     }
     private function action_update_all(){
@@ -137,10 +139,10 @@ class Polylang_SDL_Admin_Actions {
         if(isset($_GET['redirect_to'])) {
             wp_redirect(
                 add_query_arg(
-                    $reply, 
+                    $reply,
                     $_GET['redirect_to']
                 )
-            );    
+            );
         }
     }
     private function action_create_project_quick($id){
@@ -169,30 +171,35 @@ class Polylang_SDL_Admin_Actions {
         $response = $this->API->translation_create($_POST['id'], $args);
         wp_redirect(
             add_query_arg(
-                $response, 
+                $response,
                 admin_url('edit.php')
             )
         );
     }
 
     private function action_update_account_options() {
+      if($this->API->testCredentials($_POST['sdl_settings_account_username'], $_POST['sdl_settings_account_password'])){
         $options = array('sdl_settings_account_username', 'sdl_settings_account_password');
         foreach ($options as $option) {
             if (isset($_POST[$option]) && $option === 'sdl_settings_account_password') {
                 $output = openssl_encrypt($_POST[$option], 'AES-256-CBC', hash('sha256', wp_salt()), 0, substr(hash('sha256', 'managedtranslation'), 0, 16));
                 $output = base64_encode($output);
                 update_site_option($option, $output);
-            } else if (isset($_POST[$option])) { 
+            } else if (isset($_POST[$option])) {
                 update_site_option($option, $_POST[$option]);
             } else {
                 delete_site_option($option);
             }
         }
+        $this->messages['success'] = __('Authentication successful.', 'managedtranslation');
+      } else {
+        $this->messages['error'] = __('Unable to login using credentials provided.', 'managedtranslation');
+      }
     }
     private function action_update_general_settings() {
         $options = array('sdl_settings_projectoption');
         foreach ($options as $option) {
-            if (isset($_POST[$option])) { 
+            if (isset($_POST[$option])) {
                 update_site_option($option, $_POST[$option]);
             } else {
                 delete_site_option($option);

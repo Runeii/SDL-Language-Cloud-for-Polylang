@@ -3,6 +3,9 @@ class Polylang_SDL_Polylang_Integration {
 	private $post_model;
 
 	public function __construct(){
+		if(!function_exists('pll_languages_list')) {
+			test_dependencies();
+		}
 		add_action('post_updated', array($this, 'flag_existing_translations'), 10, 3);
 		add_action('current_screen', array($this, 'post_screen_functions'));
 		$this->post_model = new Polylang_SDL_Model;
@@ -44,34 +47,6 @@ class Polylang_SDL_Polylang_Integration {
 			'redirect_to' => admin_url('edit.php')
 			);
 		echo '<a class="button button-primary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update translation</a>';
-	}
-	public function sdl_manage_languages($lang, $mode = 'add'){
-		//Polylang doesn't offer a hook or function for directly interacting with languages, so this is a bit of a hack job
-		include( PLL_SETTINGS_INC.'/languages.php' );
-		if($mode == 'add') {
-			$polylang_set = $languages[$lang];
-			$args = array(
-				'name' => $polylang_set[2],
-				'locale' => $polylang_set[1],
-				'slug' => $polylang_set[0],
-				'flag' => $polylang_set[4],
-				'ltr' => $polylang_set[3]
-				);
-			$polylang_options = get_site_option('polylang', true);
-			$polylang_settings = new PLL_Admin_Model($polylang_options);
-			$polylang_settings->add_language( $args );
-
-			if ( ! isset( $polylang_options['default_lang'] ) ) {
-				// If this is the first language created, set it as default language
-				$polylang_options['default_lang'] = $args['slug'];
-				update_site_option( 'polylang', $polylang_options );
-
-				// And assign default language to default category
-				$polylang_settings->term->set_language( (int) get_option( 'default_category' ), (int) $r['term_id'] );
-			} elseif ( empty( $args['no_default_cat'] ) ) {
-				$polylang_settings->create_default_category( $args['slug'] );
-			}
-		}
 	}
 }
 ?>

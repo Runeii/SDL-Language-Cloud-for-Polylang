@@ -1,4 +1,4 @@
-<?php  
+<?php
 
 class Polylang_SDL_Admin_Panel {
     private $current_tab;
@@ -6,10 +6,16 @@ class Polylang_SDL_Admin_Panel {
     private $verbose = false;
     private $API;
     private $parent;
+    private $loggedin;
 
     public function __construct($parent){
         $this->parent = $parent;
         $this->API = new Polylang_SDL_API(true);
+        if($this->API->test_loggedIn()){
+          $this->loggedin = true;
+        } else {
+          $this->loggedin = false;
+        }
         $this->setup_page();
     }
     public function verbose($msg, $array = null) {
@@ -27,7 +33,7 @@ class Polylang_SDL_Admin_Panel {
             );
             $this->current_tab = $_GET['tab'];
         } else {
-            $this->register_tabs();   
+            $this->register_tabs();
             $this->set_default();
         }
         $this->display_page();
@@ -43,21 +49,21 @@ class Polylang_SDL_Admin_Panel {
     }
     private function register_tabs(){
         $tabs = array();
-        if($this->is_SDL_manager()){
+        if($this->is_SDL_manager() && is_network_admin()){
             $tabs['account'] = 'Account Details';
         }
-        if($this->API->test_loggedIn()){
+        if($this->loggedin == true){
             if(is_network_admin()) {
                 $tabs['network'] = 'Network Management';
-            } else {
+            } elseif($this->is_SDL_manager()){
                 $tabs['settings'] = 'General settings';
             }
         }
         $this->tabs = $tabs;
     }
     private function set_default(){
-        if(isset( $_GET['tab'] ) ) {  
-            $this->current_tab = $_GET[ 'tab' ];  
+        if(isset( $_GET['tab'] ) ) {
+            $this->current_tab = $_GET[ 'tab' ];
         } else if(isset( $this->tabs['network'] )) {
             $this->current_tab = 'network';
         } else if(isset( $this->tabs['settings'] )) {
@@ -65,34 +71,42 @@ class Polylang_SDL_Admin_Panel {
         } else if(isset( $this->tabs['account'] )) {
             $this->current_tab = 'account';
         } else {
-            if($this->API->test_loggedIn()){
-                $this->error_code = 403;
+            if($this->loggedin == true){
+              $this->error_code = 403;
             } else {
-                $this->error_code = 401;
+              $this->error_code = 401;
             }
             $this->current_tab = false;
         }
     }
     public function display_page(){
-        echo '<div id="sdl_settings" class="wrap">';
-        echo '<h2>SDL Managed Translation for Polylang</h2>';
-        settings_errors();
-        if($this->current_tab != false) {
-            echo '<div class="wp-filter">';
-            echo '<ul class="filter-links">';
-            foreach($this->tabs as $name => $display) {
-                $this->output_menu($name, $display);
-            }
-            echo '</ul>';
-            echo '</div>';
-            $this->output_panel();
-        } else {
-            echo $this->output_panel();
-        }
+      $output = '';
+      echo '<div id="sdl_settings" class="wrap">';
+      echo '<h2>SDL Managed Translation for Polylang</h2>';
+      settings_errors();
+      if(sizeof($this->parent->admin_actions->messages) > 0) {
+        echo '<div class="notice notice-'. key($this->parent->admin_actions->messages) .'">';
+          echo '<h2>' . ucwords(key($this->parent->admin_actions->messages)) . '</h2>';
+          echo '<p>'. reset($this->parent->admin_actions->messages) .'</p>';
         echo '</div>';
-        return $output;
+      }
+      if($this->current_tab != false) {
+          echo '<div class="wp-filter">';
+          echo '<ul class="filter-links">';
+          foreach($this->tabs as $name => $display) {
+              $this->output_menu($name, $display);
+          }
+          echo '</ul>';
+          echo '</div>';
+          $this->output_panel();
+      } else {
+          echo $this->output_panel();
+      }
+      echo '</div>';
+      return $output;
     }
     private function output_menu($name, $display){
+        $output = '';
         $output .= '<li><a href="?page=managedtranslation&tab='. $name .'"';
         if($this->current_tab == $name) {
             $output .= 'class="current"';
@@ -106,7 +120,7 @@ class Polylang_SDL_Admin_Panel {
                 if( ! class_exists( 'SDL_Sites_Table' ) ) {
                     require_once('class-polylang-sdl-admin–network–sites.php' );
                 }
-                $sitesTable = new SDL_Sites_Table();
+                $sitesTable = new SDL_Sites_Table($this->parent);
                 $sitesTable->prepare_items();
                 $sitesTable->display();
                 break;
@@ -126,6 +140,12 @@ class Polylang_SDL_Admin_Panel {
                 break;
             case 'account':
                 echo "<form id='account_details' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
+                    if($this->loggedin == true) {
+                      echo '<div class="updated notice notice-success">';
+                        echo '<h2>' . __( 'Logged in', 'managedtranslation' ) . '</h2>';
+                        echo '<p>'. __( 'Currently connected to SDL Managed Translation service as ', 'managedtranslation' ) . '<strong>' . get_site_option('sdl_settings_account_username', true) . '</strong></p>';
+                      echo '</div>';
+                    }
                     echo '<input type="hidden" name="action" value="sdl_update_account_details" />';
                     echo '<h2>Account details</h2>';
                     echo '<table class="form-table">';
@@ -143,9 +163,9 @@ class Polylang_SDL_Admin_Panel {
                 echo '</form>';
                 break;
             case false:
-                $url = network_admin_url('admin.php?page=managedtranslation&tab=account');
+                $output = '';
                 $output .= '<form>';
-                $this->print_error();
+                $output .= $this->print_error();
                 $output .= '</form>';
                 echo $output;
                 break;
@@ -157,17 +177,19 @@ class Polylang_SDL_Admin_Panel {
         }
     }
     private function print_error(){
-        switch ($this->error_code) {
-            case 401:
-                $output .= '<h2>Unable to connect to SDL Managed Translation</h2>';
-                $output .= '<p>Please ask network administrator to visit the <a href="'. $url .'">Network Settings page</a> to complete setup</p>';
-                break;
-            case 403:
-                $output .= '<h2>Permission denied</h2>';
-                $output .= '<p>SDL Managed Translation settings are being managed by network administrator. Please contact them for support.</p>';
-                break;
-        }
-        echo $output;
+      $output = '';
+      switch ($this->error_code) {
+        case 401:
+          $url = network_admin_url('admin.php?page=managedtranslation&tab=account');
+          $output .= '<h2>Unable to connect to SDL Managed Translation</h2>';
+          $output .= '<p>Please ask network administrator to visit the <a href="'. $url .'">Network Settings page</a> to complete setup</p>';
+          break;
+        case 403:
+          $output .= '<h2>Permission denied</h2>';
+          $output .= '<p>SDL Managed Translation settings are being managed by network administrator. Please contact them for support.</p>';
+          break;
+      }
+      return $output;
     }
     public function build_create_project_panel(){
         $ids = explode(',', $_GET['posts']);
@@ -194,10 +216,15 @@ class Polylang_SDL_Admin_Panel {
             $PIDs = get_site_option('sdl_settings_projectoptions_all');
             $offset = array_search($PID, array_column($PIDs, 'Id'));
         }
-        $date = date('Y-m-d', strtotime("+1 week")); 
+        $availableLangs = array();
+        foreach(pll_languages_list(array('fields' => 'locale')) as $lang) {
+          $availableLangs[] = strtolower(format_locale($lang));
+        };
+        $date = date('Y-m-d', strtotime("+1 week"));
         echo "<form id='create_project' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
             echo '<input type="hidden" name="action" value="sdl_create_project" />';
             echo '<input type="hidden" name="id" value="'. $_GET['posts'] .'" />';
+            echo "<input type='hidden' id='available_languages' name='languages' data-langs='". json_encode($availableLangs) ."' />";
             echo '<table class="form-table">';
             echo '<tr>';
                 echo '<th><label for="name">Project name</label></th>';
@@ -212,39 +239,48 @@ class Polylang_SDL_Admin_Panel {
                     echo '<td>';
                     if($this->is_SDL_manager()) {
                         echo '<select name="ProjectOptionsID" class="regular-text" id="PID_dropdown" form="create_project">';
-                            echo '<option>– Select project options set –</option>';
+                            echo '<option value="blank" selected>– Select project options set –</option>';
                         foreach($PIDs as $option) {
                             echo '<option value="'. $option['Id'] .'">'. $option['Name'] .'</option>';
                         }
                         echo '</select>';
                     } else {
                         echo '<select name="ProjectOptionsID" class="regular-text" form="create_project">';
-                            echo '<option>– Select project options set –</option>';
                             echo '<option value="'. $PID .'" selected>'. $PIDs[$offset]['Name'] .'</option>';
                         echo '</select>';
-                        echo '<p class="description">Project Options assigned by network administrator</p>';
+                        echo '<p class="description">Project Options set has been assigned by network administrator</p>';
                     }
                     echo '</td>';
             echo '</tr>';
             echo '<tr>';
                 echo '<th><label for="SrcLang">Source language</label></th>';
-                    echo '<td>';                        
+                    echo '<td>';
                     if($this->is_SDL_manager()) {
                         //In this situation, we dynamically update form using jQuery
                         echo '<select name="SrcLang" form="create_project" id="src_langs">';
-                        echo '<option value="blank">Please first select a Project Options set</option>';
+                        echo '<option value="blank" selected>Please first select a Project Options set</option>';
                         echo '</select>';
                     } else {
                         $langs = get_option('sdl_settings_projectoptions_sourcelang');
                         if(is_array($langs)) {
                             echo '<select name="SrcLang" form="create_project">';
+                            echo '<option value="blank" selected>Available source languages</option>';
                             foreach($langs as $lang) {
+                              if(in_array(strtolower($lang), $availableLangs)) {
                                 echo '<option value="'. $lang .'">'. $lang .'</option>';
-                            } 
+                              } else {
+                                echo '<option value="'. $lang .'" disabled>'. $lang .'</option>';
+                              }
+                            }
                             echo '</select>';
                         } else {
                             echo '<select name="SrcLang" form="create_project">';
-                            echo '<option value="'. $langs .'" selected>'. $langs .'</option>';
+                            echo '<option value="blank" selected>Available source languages</option>';
+                            if(in_array(strtolower($langs), $availableLangs)) {
+                              echo '<option value="'. $langs .'">'. $langs .'</option>';
+                            } else {
+                              echo '<option value="'. $langs .'" disabled>'. $langs .'</option>';
+                            }
                             echo '</select>';
                         }
                     }
@@ -253,16 +289,20 @@ class Polylang_SDL_Admin_Panel {
             echo '</tr>';
             echo '<tr>';
                 echo '<th><label for="TargetLangs">Target languages</label></th>';
-                    echo '<td>';                       
-                        echo '<div id="TargetLangs">'; 
+                    echo '<td>';
+                        echo "<div id='TargetLangs'>";
                         if($this->is_SDL_manager()) {
                             //In this situation, we dynamically update form using jQuery
                         } else {
                             $language_sets = get_site_option('sdl_settings_projectoptions_pairs')[$PID];
                             foreach($language_sets['Target'] as $language) {
+                              if(in_array(strtolower($language), $availableLangs)) {
                                 echo '<input type="checkbox" name="TargetLangs[]" value="' . $language .'">';
-                                echo '<label for="' . $language .'">' . $language .'</label>';
-                            } 
+                              } else {
+                                echo '<input type="checkbox" name="TargetLangs[]" value="' . $language .'" disabled>';
+                              }
+                              echo '<label for="' . $language .'">' . $language .'</label>';
+                            }
                         }
                         echo '</div>';
                     echo '</td>';
@@ -271,6 +311,7 @@ class Polylang_SDL_Admin_Panel {
                 echo '<th><label for="date">Due date</label></th>';
                     echo '<td><input name="Due date" type="date" inputmode="numeric" value="'. $date .'"></input></td>';
             echo '</tr>';
+            /*
             if($this->is_SDL_manager()) {
             } elseif(sizeof($PIDs[$offset]['TmSequences']) > 1){
                 echo '<tr>';
@@ -279,24 +320,24 @@ class Polylang_SDL_Admin_Panel {
                         echo '<select name="TmSequenceId" form="create_project">';
                         foreach($PIDs[$offset]['TmSequences'] as $sequence) {
                             echo '<option value="'. $sequence['Id'] .'">'. $sequence['Name'] .'</option>';
-                        } 
+                        }
                         echo '</select>';
                     echo '</td>';
                 echo '</tr>';
             }
             if($this->is_SDL_manager()) {
-            } elseif(sizeof($PIDs[$offset]['Vendors']) > 1){            
+            } elseif(sizeof($PIDs[$offset]['Vendors']) > 1){
                 echo '<tr>';
                     echo '<th><label for="Vendors">Vendors</label></th>';
-                    echo '<td>';    
+                    echo '<td>';
                         echo '<select name="Vendors" form="create_project">';
                         foreach($PIDs[$offset]['Vendors'] as $vendor) {
                             echo '<option value="'. $vendor .'">'. $vendor .'</option>';
-                        } 
+                        }
                         echo '</select>';
                     echo '</td>';
                 echo '</tr>';
-            }
+            } */
             echo '<tr>';
                 echo '<th><button type="submit" id="create_button" form="create_project" class="button button-primary" disabled>Create project</button></th>';
             echo '</tr>';
