@@ -51,4 +51,11 @@ For: if you need greater control over a project's settings, or to target multipl
 4. Once completed, select "Create Project" to create a project listing in SDL Managed Translation and send the posts for translation.
 
 ### Downloading completed translation projects ###
-1. The SDL Managed Translation plugin will automatically monitor the progress of
+1. The SDL Managed Translation plugin will automatically monitor the progress of translation projects, polling every 15 minutes for an update.
+2. Once translation is completed, Wordpress will download the translation, add to database, and mark the project as complete in SDL Managed Translation.
+
+## Notes on Multisite environments
+In a multisite environment, there are a number of differences to be aware of:
+* **Network level activation**: the plugin must be activated at a network level, rather than per site.
+* **Authentication**: authentication _must_ be done by a Super Admin via the Network administration panel. These credentials will then be used by each other site in the network for translations.
+* **Delegation**: by default, Super Admins must manage and assign specific Project Option sets to each site in the network. If this behaviour is not desirable, they can delegate management of Project Option sets to each site via the **Network admin** -> **SDL Managed Translation** -> **Network Management** panel, clicking the button marked *Disable Network-level management*.
