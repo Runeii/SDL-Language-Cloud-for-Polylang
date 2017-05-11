@@ -10,7 +10,7 @@ class Polylang_SDL_Admin_Actions {
         $this->API = new Polylang_SDL_API(true);
         $this->messages = array();
         if(isset($_GET['override'])) {
-            $_POST['action'] =  $_GET['action'];
+            $_POST['action'] = $_GET['action'];
         }
         if(isset($_POST['action'])) {
             $this->process_action();
@@ -162,12 +162,13 @@ class Polylang_SDL_Admin_Actions {
             'Due date' => date('Y-m-d\TH:i:s.Z\Z', strtotime($_POST['Due_date'])),
             'Targets' => $_POST['TargetLangs'],
         );
+        /*
         if($_POST['TmSequenceId'] != null) {
             $args['TmSequenceId'] = $_POST['TmSequenceId'];
         };
         if($_POST['Vendors'] != null) {
             $args['Vendors'] = $_POST['Vendors'];
-        }
+        } */
         $response = $this->API->translation_create($_POST['id'], $args);
         wp_redirect(
             add_query_arg(

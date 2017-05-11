@@ -49,7 +49,7 @@ class Polylang_SDL_Admin_Panel {
     }
     private function register_tabs(){
         $tabs = array();
-        if($this->is_SDL_manager() && is_network_admin()){
+        if(($this->is_SDL_manager() && is_network_admin()) || !is_multisite()){
             $tabs['account'] = 'Account Details';
         }
         if($this->loggedin == true){

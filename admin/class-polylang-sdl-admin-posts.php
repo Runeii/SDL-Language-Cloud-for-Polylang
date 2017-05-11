@@ -136,7 +136,6 @@ class Polylang_SDL_Admin_Posts {
 			add_query_arg(
 				array(
 					'page' => 'managedtranslation&tab=create_project',
-					'override' => '1',
 					'posts' => $sanitised_ids),
 				admin_url('admin.php')
 			)

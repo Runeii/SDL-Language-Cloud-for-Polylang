@@ -76,7 +76,7 @@ function test_dependencies()
 		deactivate_plugins( plugin_basename( __FILE__) );
 		wp_die( __( 'Polylang installation is corrupted, or an incompatible version.', 'managedtranslation' ), 'Plugin dependency check', array( 'back_link' => true ) );
 	}
-	if (!is_plugin_active_for_network( plugin_basename(__FILE__)) ) {
+	if (!is_plugin_active_for_network( plugin_basename(__FILE__)) && is_multisite() ) {
 		deactivate_plugins( plugin_basename( __FILE__) );
 		wp_die( __( 'Multisite setup detected. Please activate plugin via Network administration screen.', 'managedtranslation' ), 'Plugin scope check', array( 'back_link' => true ) );
 	}
