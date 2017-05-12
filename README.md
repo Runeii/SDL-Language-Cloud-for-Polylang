@@ -12,7 +12,6 @@ This plugin has been designed to support both standard and multi-site Wordpress 
 3. Activate "SDL Managed Translation" via the Wordpress Admin CMS (Plugins -> Installed Plugins)
 
 ## Installation (network level)
-** More information on
 1. In the Network Administration menu, install the [Polylang multilingual plugin](https://en-gb.wordpress.org/plugins/polylang/) for Wordpress
 2. Extract the contents of the Managed Translation .zip file to the Network plugins directory, at /wp-content/plugins/managedtranslation
 3. Activate "SDL Managed Translation" via the Network Admin CMS (**Plugins** -> **Installed Plugins**)
@@ -28,7 +27,7 @@ This plugin has been designed to support both standard and multi-site Wordpress 
 The default Project Options set for translation projects, used for "Quick translation" jobs, can be defined via the **Managed Translation** -> **General Settings** panel. The drop down menu will list all Project Options sets that are available to your SDL Managed Translation account.
 
 ### Network wide installation
-Super admins may assign a default Project Options set for each blog in the network via the **Network admin** -> **Managed Translation** -> **  
+Super admins may assign a default Project Options set for each blog in the network via the **Network admin** -> **Managed Translation** -> ** Network setup ** screen.
 
 ## Usage
 ### Quick translation ###
