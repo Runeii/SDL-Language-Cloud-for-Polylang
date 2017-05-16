@@ -5,15 +5,18 @@ class Polylang_SDL_Admin_Actions {
     private $verbose = false;
     private $API;
     public $messages;
+    public $action_name;
 
     public function __construct(){
         $this->API = new Polylang_SDL_API(true);
         $this->messages = array();
-        if(isset($_GET['override'])) {
-            $_POST['action'] = $_GET['action'];
+        if(isset($_GET['action'])) {
+          $this->action_name = $_GET['action'];
+        } elseif(isset($_POST['action'])) {
+          $this->action_name = $_POST['action'];
         }
-        if(isset($_POST['action'])) {
-            $this->process_action();
+        if(isset($this->action_name)) {
+          $this->process_action();
         }
     }
     public function verbose($msg, $array = null) {
@@ -26,7 +29,7 @@ class Polylang_SDL_Admin_Actions {
     }
 
     private function process_action(){
-        switch ($_POST['action']) {
+        switch ($this->action_name) {
             case 'sdl_update_account_details':
                 $this->action_update_account_options();
                 break;
@@ -34,7 +37,7 @@ class Polylang_SDL_Admin_Actions {
                 $this->action_update_general_settings();
                 break;
             case 'sdl_create_project_quick':
-                $this->action_create_project_quick($_POST['id']);
+                $this->action_create_project_quick();
                 break;
             case 'sdl_create_project':
                 $this->action_create_project();
@@ -81,7 +84,6 @@ class Polylang_SDL_Admin_Actions {
     }
     private function is_SDL_manager(){
         if(is_network_admin() ||  get_site_option('sdl_settings_networktoggle') == 1 || !is_multisite() ) {
-            $this->verbose('We are SDL manager');
             return true;
         } else {
             $this->verbose('We are not SDL manager');
@@ -95,7 +97,7 @@ class Polylang_SDL_Admin_Actions {
             'Targets' => array($_GET['target_lang'])
         );
         $response = $this->API->translation_create($_GET['src_id'], $args);
-        if($response['key'] == 'translation_success') {
+        if(array_key_exists('translation_success', $response)) {
             $reply = array('update_success' => 1);
         } else {
             $reply = array('update_error' => $response['translation_error']);
@@ -145,13 +147,21 @@ class Polylang_SDL_Admin_Actions {
             );
         }
     }
-    private function action_create_project_quick($id){
+    private function action_create_project_quick(){
         $args = array(
             'ProjectOptionsID' => get_option('sdl_settings_projectoption'),
             'SrcLang' => strtolower(get_option('sdl_settings_projectoptions_sourcelang')),
-            'Targets' => array(sdl_get_post_language($id, 'locale'))
+            'Targets' => array($_GET['TargetLang'])
         );
-        $response = $this->API->translation_create($id, $args);
+        $response = $this->API->translation_create($_GET['id'], $args);
+        if(isset($_GET['redirect_to'])) {
+            wp_redirect(
+                add_query_arg(
+                    $response,
+                    $_GET['redirect_to']
+                )
+            );
+        }
     }
     private function action_create_project(){
         $args = array(
@@ -169,7 +179,9 @@ class Polylang_SDL_Admin_Actions {
         if($_POST['Vendors'] != null) {
             $args['Vendors'] = $_POST['Vendors'];
         } */
+        $this->verbose('Sending args: ', $args);
         $response = $this->API->translation_create($_POST['id'], $args);
+        $this->verbose('Message back from API: ', $response);
         wp_redirect(
             add_query_arg(
                 $response,
@@ -192,6 +204,7 @@ class Polylang_SDL_Admin_Actions {
                 delete_site_option($option);
             }
         }
+        $this->API->user_options();
         $this->messages['success'] = __('Authentication successful.', 'managedtranslation');
       } else {
         $this->messages['error'] = __('Unable to login using credentials provided.', 'managedtranslation');

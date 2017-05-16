@@ -27,15 +27,8 @@ class Polylang_SDL_Admin_Panel {
         }
     }
     private function setup_page(){
-        if(isset($_GET['override'])) {
-            $this->tabs = array(
-                $_GET['tab'] => ucfirst(str_replace('_', ' ', $_GET['tab']))
-            );
-            $this->current_tab = $_GET['tab'];
-        } else {
-            $this->register_tabs();
-            $this->set_default();
-        }
+        $this->register_tabs();
+        $this->set_default();
         $this->display_page();
     }
     private function is_SDL_manager(){

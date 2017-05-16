@@ -23,20 +23,22 @@ class Polylang_SDL_Admin {
 			$this->register_interface();
 			$polylang = new Polylang;
 			new Polylang_SDL_Polylang_Integration;
-   		$this->admin_actions = new Polylang_SDL_Admin_Actions();
 
-			add_action( 'current_screen', 'check_current_screen' );
-			function check_current_screen(){
-				if ( is_admin() ) {
-					$screen = get_current_screen();
-					if($screen->base == 'edit' && pll_is_translated_post_type($screen->post_type)) {
-						new Polylang_SDL_Admin_Posts;
-					}
-				}
+			add_action( 'wp_loaded', array($this, 'process_actions') );
+			add_action( 'current_screen', array($this, 'check_translated_post_screen') );
+		}
+	}
+	public function process_actions(){
+		$this->admin_actions = new Polylang_SDL_Admin_Actions();
+	}
+	public function check_translated_post_screen(){
+		if ( is_admin() ) {
+			$screen = get_current_screen();
+			if($screen->base == 'edit' && pll_is_translated_post_type($screen->post_type)) {
+				new Polylang_SDL_Admin_Posts;
 			}
 		}
 	}
-
 	public function enqueue_styles() {
 
 		wp_enqueue_style( $this->polylang_sdl, plugin_dir_url( __FILE__ ) . 'css/polylang-sdl-admin.css', array(), $this->version, 'all' );

@@ -74,7 +74,7 @@ class Polylang_SDL_Model {
 		$this->sync_all($id, $map);
 		return true;
 	}
-	public function get_old($id = null){
+	public function get_old($id = null, $clean = false){
 		if($id === null) {
 			$id = $this->parent_id;
 		}
@@ -89,6 +89,10 @@ class Polylang_SDL_Model {
 			}
 		}
 		$this->verbose('Listing out of date translations: ', $old);
+		//Sometimes we need to destroy the existing settings to prevent issues/needing to constantly reinitialise post model
+		if($clean === true) {
+			$this->map = null;
+		}
 		return $old;
 	}
 	public function add_to_map($id, $options_set = null) {

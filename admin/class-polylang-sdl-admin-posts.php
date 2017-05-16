@@ -30,8 +30,8 @@ class Polylang_SDL_Admin_Posts {
 				$this->notice_message = 'no_language';
 			}
 			add_action( 'admin_notices', array($this, 'handle_dropdowns_notice') );
-			add_filter( 'manage_posts_columns', array($this, 'sdl_posts_translation_column') );
-			add_filter( 'manage_posts_custom_column', array($this, 'sdl_posts_translation_column_row'), 10, 2 );
+			add_filter( 'manage_posts_columns', array($this, 'sdl_posts_translation_column'), 10);
+			add_action( 'manage_posts_custom_column', array($this, 'sdl_posts_translation_column_row'), 10, 2 );
 		}
 		$this->args = array(
 			'ProjectOptionsID' => get_option('sdl_settings_projectoption'),
@@ -66,9 +66,16 @@ class Polylang_SDL_Admin_Posts {
 		if($suffix === 'full') {
 			$response = $this->create_project_form($post_ids);
 		} else {
-			$this->args['Targets'] = array($suffix);
-			$response = $this->api->translation_create($post_ids, $this->args);
-			wp_redirect( add_query_arg($response, admin_url('edit.php')) );
+			$sanitised_ids = implode(',', $post_ids);
+			wp_redirect(add_query_arg(
+					array(
+						'page' => 'managedtranslation',
+						'action' => 'sdl_create_project_quick',
+						'id' => $sanitised_ids,
+						'TargetLang' => $suffix,
+						'redirect_to' => admin_url('edit.php')
+					), admin_url('admin.php')
+			));
 		}
 	}
 
@@ -148,6 +155,37 @@ class Polylang_SDL_Admin_Posts {
 	}
 	public function sdl_posts_translation_column_row($column, $post_id) {
 		switch ( $column ) {
+			case stristr($column,'language_'):
+				$language = substr($column, 9);
+				$map = $this->post_model->get_source_map($post_id);
+				$details = $this->post_model->get_details($post_id, $map);
+				$out_of_date = $this->post_model->get_old($post_id);
+				if(array_key_exists($language, $map['in_progress'])) {
+						echo '<a href="#" title="Translation in progress" alt="Translation in progress" class="managedtranslation-icon-inprogress hide-next-link">
+											<span class="screen-reader-text">Translation in progress</span>
+										</a>';
+				} elseif(array_key_exists($language, $out_of_date)) {
+					if($out_of_date[$language]['id'] == $post_id || $map['parent']['id'] == $post_id) {
+						echo '<a href="'. get_edit_post_link($details['id']) .'" title="Translation out of date" alt="Translation out of date" class="managedtranslation-icon-outofdate this-is-me hide-next-link">
+											<span class="screen-reader-text">Translation out of date</span>
+										</a>';
+					} else {
+						echo '<a href="'. get_edit_post_link($details['id']) .'" title="Translation out of date" alt="Translation out of date" class="managedtranslation-icon-outofdate hide-next-link">
+											<span class="screen-reader-text">Translation out of date</span>
+										</a>';
+					}
+				} elseif(array_key_exists($language, $map['children']) && $map['children'][$language] != null) {
+					if($map['children'][$language]['id'] == $post_id || $map['parent']['id'] == $post_id) {
+						echo '<a href="'. get_edit_post_link($details['id']) .'" title="Edit Managed Translation" alt="Created via Managed Translation" class="managedtranslation-icon-translation this-is-me hide-next-link">
+											<span class="screen-reader-text">Created via Managed Translation</span>
+										</a>';
+					} else {
+						echo '<a href="'. get_edit_post_link($details['id']) .'" title="Edit Managed Translation (different post)" alt="Created via Managed Translation (different post)" class="managedtranslation-icon-translation hide-next-link">
+											<span class="screen-reader-text">Created via Managed Translation (different post)</span>
+										</a>';
+					}
+				}
+				break;
 			case 'sdl_translation':
 				$map = $this->post_model->get_source_map($post_id);
 				$details = $this->post_model->get_details($post_id, $map);
@@ -166,7 +204,7 @@ class Polylang_SDL_Admin_Posts {
 							'project_options' => $details['produced_by'],
 							'redirect_to' => admin_url('edit.php')
 							);
-						echo '<a class="button button-secondary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update translation</a>';
+						echo '<a class="button button-secondary" href="admin.php?page=managedtranslation&'. http_build_query($args) .'">Update translation</a>';
 					} elseif(is_array($out_of_date) && $post_id == $map['parent']['id'] && count($out_of_date) > 0) {
 						$args = array(
 							'action' => 'sdl_update_all',
@@ -174,7 +212,7 @@ class Polylang_SDL_Admin_Posts {
 							'src_lang' => $map['parent']['locale'],
 							'redirect_to' => admin_url('edit.php')
 							);
-						echo '<a class="button button-primary" href="admin.php?page=managedtranslation&override=1&'. http_build_query($args) .'">Update all Translations</a>';
+						echo '<a class="button button-primary" href="admin.php?page=managedtranslation&'. http_build_query($args) .'">Update all Translations</a>';
 					}  elseif($post_id != $map['parent']['id']) {
 						echo '<button class="button delete" disabled>Up to date</button>';
 					} elseif($post_id == $map['parent']['id']) {

@@ -42,7 +42,7 @@ class Polylang_SDL_Create_XLIFF {
                                     'fileId' => $api->file_upload($xliff, $args['ProjectOptionsID'])[0]['FileId'],
                                     'targets' => array($target_lang)
                                 );
-            }    
+            }
         }
         return $file_upload;
     }
@@ -54,8 +54,8 @@ class Polylang_SDL_Create_XLIFF {
 
     	$attributes = array(
     		'target-language' => $target,
-            'original' => $this->create_unique($id),
-			'source-language' => $src,
+        'original' => $this->create_unique($id),
+				'source-language' => $src,
     		'external-file' => get_permalink($id)
     	);
     	$this->attributes = array_replace($this->attributes, $attributes);
@@ -88,7 +88,7 @@ class Polylang_SDL_Create_XLIFF {
         if($post_meta != false && $post_meta != null && $post_meta != '') {
             foreach($post_meta as $name => $value) {
                 //Wordpress stores system meta with the "_" prefix. We don't want these fields.
-                if($name[0] != "_" ) { 
+                if($name[0] != "_" ) {
                     $this->structure['meta'][$name] = $value[0];
                 }
             }
@@ -111,9 +111,9 @@ class Polylang_SDL_Create_XLIFF {
     	foreach($this->structure as $name => $content) {
             if($name == 'taxonomy') {
                 $tax_i = 0;
-                foreach($content as $tax => $value) { 
+                foreach($content as $tax => $value) {
                     foreach($value as $entry) {
-                        $unit = $this->create_transUnit('taxonomy_' . $tax_i, $entry['name'], 'taxonomy', $tax, $entry['id']); 
+                        $unit = $this->create_transUnit('taxonomy_' . $tax_i, $entry['name'], 'taxonomy', $tax, $entry['id']);
                     }
                     $body->appendChild($unit);
                     $tax_i++;
@@ -163,7 +163,7 @@ class Polylang_SDL_Create_XLIFF {
 		$unit = $this->doc->createElement('trans-unit');
 		$unit->setAttribute( "restype", 'string');
 		$unit->setAttribute( "datatype", 'html');
-        
+
         $unit->setAttribute( "id", $name);
 
         if($res_name === null) {

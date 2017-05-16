@@ -195,7 +195,7 @@ class Polylang_SDL_API {
 	public function testCredentials($u = null, $p = null){
 		$username = $u ?: $this->username;
 		$password = $p ?: $this->password;
-		
+
 		$args = array(
 			'grant_type' => 'password',
 			'username' => $username,
@@ -395,8 +395,13 @@ class Polylang_SDL_API {
 				$args['Name'] = get_the_title($id[0]);
 			}
 		}
+		$args['Name'] = substr($args['Name'], 0, 49);
+		if(!isset($args['Description'])) {
+			$args['Description'] = 'Quick translation project';
+		}
 		$convertor = new Polylang_SDL_Create_XLIFF;
 		$args['Files'] = $convertor->package_post($id, $args);
+		$targets = $args['Targets'];
 		unset($args['Targets']);
 		$response = $this->project_create($args);
 		if(is_array($response)) {
@@ -408,12 +413,14 @@ class Polylang_SDL_API {
 			update_option('sdl_translations_inprogress', $inprogress);
 			foreach($id as $post) {
 				$post_model = new Polylang_SDL_Model;
-				$map = $post_model->add_in_progress($post, $args['Files'][0]['targets'][0], $args['ProjectOptionsID']);
+				foreach($targets as $target) {
+					$map = $post_model->add_in_progress($post, $target, $args['ProjectOptionsID']);
+				}
 			}
-			$reply = array('translation_success' => count( $id ));
+			$reply = array('translation_success' =>  count($id));
 		}
 		else {
-			$reply = array('translation_error' => 'API error ' . $response);
+			$reply = array('translation_error' => urlencode('API error ' . $response .'. Sent: ' . JSON_encode($args)));
 		}
 		return $reply;
 	}

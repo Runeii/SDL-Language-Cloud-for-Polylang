@@ -85,12 +85,11 @@ add_action('admin_init', 'test_dependencies');
 
 function sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
-	var_dump($inprogress);
 	$api = new Polylang_SDL_API;
 	//Test if anything is in progress
 	error_log('SDL: Polling for project updates', 0);
+	error_log('SDL: Currently ' . sizeof($inprogress) . ' in progress', 0);
 	if(is_array($inprogress) && sizeof($inprogress) > 0) {
-		error_log('SDL: Currently ' . sizeof($inprogress) . ' in progress', 0);
 		foreach($inprogress as $project) {
 			error_log('SDL: Looking up '. $project, 0);
 			$status = $api->project_getStatusCode($project);
@@ -99,7 +98,6 @@ function sdl_poll_projects(){
 			if($status == 3 || $status == 4 || $status == 5) {
 				$file = $api->translation_download($project);
 				//Test that the download was successful
-				var_dump($file);
 				if($file) {
 					error_log('SDL: Download successful', 0);
 					$unpack = new Polylang_SDL_Unpack_XLIFF;
