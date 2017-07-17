@@ -10,16 +10,18 @@ class Polylang_SDL_API {
     public function __construct($test = false, $username = null, $password = null) {
     	$this->username = $username ?: get_site_option('sdl_settings_account_username');
 			$this->password = $password ?: get_site_option('sdl_settings_account_password');
-    	if($this->password != null && $password === null) {
-				$this->password = $this->decrypt($this->password);
-    	}
-			$this->authtoken = get_site_option('sdl_authtoken');
-			//While working offline, going to completely disable this section
-			//See also loggedin test, below
+			if(isset($this->username) && $this->username !== '' || $this->username !== null) {
+	    	if($this->password != null && $password === null) {
+					$this->password = $this->decrypt($this->password);
+	    	}
+				$this->authtoken = get_site_option('sdl_authtoken');
+				//While working offline, going to completely disable this section
+				//See also loggedin test, below
 
-			if($test === false){
-				$this->verbose('This is not a test.');
-				$this->connect_authtoken();
+				if($test === false){
+					$this->verbose('This is not a test.');
+					$this->connect_authtoken();
+				}
 			}
     }
     public function verbose($msg, $array = null) {
@@ -143,7 +145,7 @@ class Polylang_SDL_API {
 	*/
 	public function connect_authtoken() {
 		$this->authtoken = get_site_option('sdl_authtoken', null);
-		if($this->connect_checkExpired()) {
+		if($this->authtoken === false || $this->connect_checkExpired()) {
 			$this->verbose("We're getting a fresh token");
 			$this->connect_authenticate();
 		}
@@ -183,14 +185,17 @@ class Polylang_SDL_API {
 	/*
 	// User testing functions
 	*/
-	public function test_loggedIn(){
-
-		if($this->connect_checkExpired()) {
-			return $this->testCredentials();
+	public function test_loggedIn() {
+		$this->authtoken = get_site_option('sdl_authtoken', null);
+		if($this->authtoken != false) {
+			if($this->connect_checkExpired()) {
+				return $this->testCredentials();
+			} else {
+				return true;
+			}
 		} else {
-			return true;
+			return false;
 		}
-		return true;
 	}
 	public function testCredentials($u = null, $p = null){
 		$username = $u ?: $this->username;

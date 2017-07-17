@@ -33,6 +33,9 @@ class Polylang_SDL_Admin_Actions {
             case 'sdl_update_account_details':
                 $this->action_update_account_options();
                 break;
+            case 'sdl_logout':
+                $this->action_logout();
+                break;
             case 'sdl_update_generalsettings':
                 $this->action_update_general_settings();
                 break;
@@ -209,6 +212,12 @@ class Polylang_SDL_Admin_Actions {
       } else {
         $this->messages['error'] = __('Unable to login using credentials provided.', 'managedtranslation');
       }
+    }
+    public function action_logout() {
+      delete_site_option('sdl_settings_account_username');
+      delete_site_option('sdl_settings_account_password');
+      delete_site_option('sdl_authtoken');
+      $this->messages['success'] = __('Logout successful.', 'managedtranslation');
     }
     private function action_update_general_settings() {
         $options = array('sdl_settings_projectoption');

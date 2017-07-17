@@ -74,3 +74,49 @@
 .hide-next-link ~ a {
   display:none !important;
 }
+#sdl_settings .about-wrap {
+  margin:0 auto;
+  text-align: center;
+}
+#sdl_settings .about-text {
+  margin-right:0;
+}
+#sdl_settings .about-wrap h1 {
+  margin-top:0.67em;
+  margin-right:0;
+}
+.sdl-welcome h3 {
+  margin:0;
+}
+.sdl-welcome .welcome-panel-column-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.sdl-welcome .welcome-panel-column {
+  padding:2rem;
+  width:33%;
+  text-align:center;
+}
+.sdl-welcome .welcome-panel-column:first-child {
+  width:calc(33% - 4rem);
+}
+.sdl-welcome .dashicons {
+  font-size:9rem;
+  height:9rem;
+  width:9rem;
+}
+.sdl-divider {
+  margin:2rem 0;
+  height:1px;
+  background-color: #ccc;
+}
+.sdl-blurb {
+  text-align:center;
+}
+.sdl-blurb .feature {
+  width:calc(49% - 4rem);
+  float:left;
+  padding:2rem;
+}

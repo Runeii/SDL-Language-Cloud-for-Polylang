@@ -91,8 +91,19 @@ class Polylang_SDL_Admin {
         }
     }
     $selector .= '</select>';
-    if($count == 0) {
-    	$selector .= '<p style="font-style:italic">Error: no project option sets include current WordPress locale ('. $lang .') as a source language</p>';
+    if($count === 0) {
+			$errorlog = array(
+				'available_pairs' => get_site_option('sdl_settings_projectoptions_pairs'),
+				'formatted_locale' => get_formatted_locale($blog),
+				'projectoptions' => get_site_option('sdl_settings_projectoptions_all'),
+				'site_lang' => get_locale(),
+				'network_lang' => get_site_option('WPLANG'),
+				'site_lang_WPLANG' => get_blog_option($blog, 'WPLANG'),
+				'polylang_langs' => pll_languages_list(),
+				'polylang_default_slug' => pll_default_language('slug'),
+				'poylang_default_locale' => pll_default_language('locale')
+			);
+    	$selector .= '<p style="font-style:italic; margin-right:75px;">Error: no project option sets include current WordPress locale ('. $lang .') as a source language. <a href="mailto:contact@andrewthomashill.co.uk?subject=SDL%20LOG%20SiteLangagueIssue&body='. urlencode(json_encode($errorlog)) .'">Send error log via email</a></p>';
     }
     return $selector;
 	}

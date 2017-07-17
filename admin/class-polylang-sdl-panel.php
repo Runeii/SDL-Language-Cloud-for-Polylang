@@ -42,6 +42,7 @@ class Polylang_SDL_Admin_Panel {
     }
     private function register_tabs(){
         $tabs = array();
+        $tabs['welcome'] = 'Welcome';
         if(($this->is_SDL_manager() && is_network_admin()) || !is_multisite()){
             $tabs['account'] = 'Account Details';
         }
@@ -62,7 +63,7 @@ class Polylang_SDL_Admin_Panel {
         } else if(isset( $this->tabs['settings'] )) {
             $this->current_tab = 'settings';
         } else if(isset( $this->tabs['account'] )) {
-            $this->current_tab = 'account';
+            $this->current_tab = 'welcome';
         } else {
             if($this->loggedin == true){
               $this->error_code = 403;
@@ -109,6 +110,9 @@ class Polylang_SDL_Admin_Panel {
     }
     private function output_panel(){
         switch($this->current_tab) {
+            case 'welcome':
+              $this->build_welcome();
+              break;
             case 'network':
                 if( ! class_exists( 'SDL_Sites_Table' ) ) {
                     require_once('class-polylang-sdl-admin–network–sites.php' );
@@ -133,15 +137,16 @@ class Polylang_SDL_Admin_Panel {
                 break;
             case 'account':
                 echo "<form id='account_details' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
-                    if($this->loggedin == true) {
-                      echo '<div class="updated notice notice-success">';
-                        echo '<h2>' . __( 'Logged in', 'managedtranslation' ) . '</h2>';
-                        echo '<p>'. __( 'Currently connected to SDL Managed Translation service as ', 'managedtranslation' ) . '<strong>' . get_site_option('sdl_settings_account_username', true) . '</strong></p>';
-                      echo '</div>';
-                    }
+                  if($this->loggedin == true) {
+                    echo '<div class="updated notice notice-success">';
+                      echo '<h2>' . __( 'Logged in', 'managedtranslation' ) . '</h2>';
+                      echo '<p>'. __( 'Currently connected to SDL Managed Translation service as ', 'managedtranslation' ) . '<strong>' . get_site_option('sdl_settings_account_username', true) . '</strong></p>';
+                    echo '</div>';
+                  }
+                  echo '<h2>Account details</h2>';
+                  echo '<table class="form-table">';
+                  if($this->loggedin !== true) {
                     echo '<input type="hidden" name="action" value="sdl_update_account_details" />';
-                    echo '<h2>Account details</h2>';
-                    echo '<table class="form-table">';
                     echo '<tr>';
                         echo '<th><label for="sdl_settings_account_username">Username</label></th>';
                             echo '<td><input type="text" name="sdl_settings_account_username" value="'. get_site_option('sdl_settings_account_username') . '" /></td>';
@@ -151,8 +156,15 @@ class Polylang_SDL_Admin_Panel {
                             echo '<td><input type="password" name="sdl_settings_account_password" /></td>';
                     echo '</tr>';
                     echo '<tr>';
-                        echo '<th><button type="submit" form="account_details" class="button button-primary">Login to Managed Translation</button></th>';
+                      echo '<th><button type="submit" form="account_details" class="button button-primary">Login to Managed Translation</button></th>';
                     echo '</tr>';
+                  } else {
+                    echo '<tr>';
+                      echo '<input type="hidden" name="action" value="sdl_logout" />';
+                      echo '<td><button type="submit" form="account_details" class="button button-primary">Logout</button></td>';
+                    echo '</tr>';
+                  }
+                  echo '</table>';
                 echo '</form>';
                 break;
             case false:
@@ -337,5 +349,54 @@ class Polylang_SDL_Admin_Panel {
             echo '</table>';
         echo '</form>';
     }
+  function build_welcome(){ ?>
+    <div class="wrap about-wrap">
+        <img src="<?php echo plugin_dir_url( __FILE__ ); ?>/img/sdl_header_image.jpg" />
+		    <h1>Welcome to SDL Managed Translation for Polylang</h1>
+		    <div class="about-text">Thank you for installing the SDL Managed Translation plugin for WordPress</div>
+				<div id="welcome-panel" class="welcome-panel sdl-welcome">
+					<div class="welcome-panel-content">
+						<h3>To start translating your site, simply follow these 3 steps</h3>
+						<div class="welcome-panel-column-container">
+							<div class="welcome-panel-column">
+                <span class="dashicons dashicons-admin-users"></span>
+								<p>Register your free SDL Managed Translation account</p>
+                <a href="https://languagecloud.sdl.com/en/managed-translation/register" class="button button-primary">Register</a>
+							</div>
+							<div class="welcome-panel-column">
+                <span class="dashicons dashicons-admin-network"></span>
+								<p>Login from the plugin Account Details tab to link your new Managed Translation account to your WordPress site</p>
+                <a href="<?php echo network_admin_url('admin.php?page=managedtranslation&tab=account'); ?>" class="button button-primary">Visit tab</a>
+							</div>
+							<div class="welcome-panel-column welcome-panel-last">
+                <span class="dashicons dashicons-translation"></span>
+								<p>Start managing your multilingual web content and translation projects from within WordPress</p>
+							</div>
+						</div>
+					</div>
+				</div>
+        <hr class="sdl-divider"></hr>
+        <div class="sdl-blurb">
+          <h2>Key benefits of the SDL Managed Translation plugin for WordPress</h2>
+          <p class="about-text">Remember, the SDL Managed Translation plugin for WordPress is your hassle-free way to improve translation quality, accelerate speed to market of translated content and enhance the performance of your WordPress sites.</p>
+          <div class="feature">
+            <h4>Deliver quicker</h4>
+            <p>Our simple but powerful platform is proven to cut the time to market for translated content</p>
+          </div>
+          <div class="feature">
+            <h4>Save money</h4>
+            <p>Our smart Translation Memory means you’ll never pay to translate the same phrase twice as you build your translation memory and control terminology</p>
+          </div>
+          <div class="feature">
+            <h4>Improve quality and consistency</h4>
+            <p>Our expert ISO certified translation service is delivered through a robust and secure cloud platform</p>
+          </div>
+          <div class="feature">
+            <h4>Gain control</h4>
+            <p>Use your SDL interface to track project progress, manage spend and identify savings</p>
+          </div>
+        </div>
+    <?php
+  }
 }
 ?>
