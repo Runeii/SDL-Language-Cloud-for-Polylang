@@ -26,10 +26,7 @@ class Polylang_SDL_API {
     }
     public function verbose($msg, $array = null) {
     	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
-	    	if($array != null) {
-	    		var_dump($array);
-	    	}
+    		var_dump('Error: ' . $msg, $array);
     	}
     }
 	/*

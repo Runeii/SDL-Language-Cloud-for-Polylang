@@ -20,9 +20,9 @@ class Polylang_SDL_Create_XLIFF {
         $files = new Polylang_SDL_Files;
         $this->xliff_storage_path = $files->getFolder('converted');
     }
-    private function verbose($msg) {
+    public function verbose($msg, $array = null) {
     	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
+    		var_dump('Error: ' . $msg, $array);
     	}
     }
     private function create_unique($id){

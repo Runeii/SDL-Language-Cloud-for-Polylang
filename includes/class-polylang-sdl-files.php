@@ -12,9 +12,9 @@ class Polylang_SDL_Files {
     		mkdir($this->translation_storage_path);
     	}
     }
-    private function verbose($msg) {
+    public function verbose($msg, $array = null) {
     	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
+    		var_dump('Error: ' . $msg, $array);
     	}
     }
 
@@ -40,12 +40,12 @@ class Polylang_SDL_Files {
 		    	}
 		    	return $folder;
 	        default:
-	            $folder = $this->translation_storage_path;	            
+	            $folder = $this->translation_storage_path;
 	            if(!file_exists($folder)) {
 		    		mkdir($folder);
 		    	}
 		    	return $folder;
-	    }	
+	    }
     }
 	/*
 	// Zip file handling

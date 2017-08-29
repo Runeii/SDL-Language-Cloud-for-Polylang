@@ -19,14 +19,11 @@ class Polylang_SDL_Admin_Actions {
           $this->process_action();
         }
     }
-    public function verbose($msg, $array = null) {
-        if($this->verbose === true) {
-            echo '<b>Console: </b>'. $msg .'<br />';
-            if($array != null) {
-                var_dump($array);
-            }
+        public function verbose($msg, $array = null) {
+        	if($this->verbose === true) {
+        		var_dump('Error: ' . $msg, $array);
+        	}
         }
-    }
 
     private function process_action(){
         switch ($this->action_name) {
@@ -222,14 +219,14 @@ class Polylang_SDL_Admin_Actions {
     private function action_update_general_settings() {
         $options = array('sdl_settings_projectoption');
         foreach ($options as $option) {
-            if (isset($_POST[$option])) {
-                update_site_option($option, $_POST[$option]);
+            if (isset($_POST[$option]) && $_POST[$option] != 'blank') {
+              update_site_option($option, $_POST[$option]);
+              $pairs = get_site_option('sdl_settings_projectoptions_pairs');
+              update_option('sdl_settings_projectoptions_sourcelang', strtolower($pairs[$_POST['sdl_settings_projectoption']]['Source'][0]));
             } else {
-                delete_site_option($option);
+              delete_site_option($option);
             }
         }
-        $pairs = get_site_option('sdl_settings_projectoptions_pairs');
-        update_option('sdl_settings_projectoptions_sourcelang', strtolower($pairs[$_POST['sdl_settings_projectoption']]['Source'][0]));
     }
 }
 ?>

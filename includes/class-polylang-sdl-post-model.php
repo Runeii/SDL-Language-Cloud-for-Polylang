@@ -18,15 +18,12 @@ class Polylang_SDL_Model {
     }
 	}
 
-    private function verbose($msg, $array = null) {
-    	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
-    		if($array != null) {
-    			var_dump($array);
-    		}
-    	}
-    }
-
+	public function verbose($msg, $array = null) {
+		if($this->verbose === true) {
+			var_dump('Error: ' . $msg, $array);
+		}
+	}
+	
 	public function get_source_id($id){
 		$source = get_post_meta($id, '_sdl_source_id', true);
 		if($source == $id || ($source == '' || $source == null || $source == false)) {

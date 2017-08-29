@@ -12,16 +12,16 @@ class Polylang_SDL_Local {
         $this->post_model = new Polylang_SDL_Model;
     }
 
-    private function verbose($msg) {
-    	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
-    	}
-    }
+		public function verbose($msg, $array = null) {
+			if($this->verbose === true) {
+				var_dump('Error: ' . $msg, $array);
+			}
+		}
 
     public function save_post_translation($structure){
         $this->post_structure = $structure;
         $this->post_structure['attributes']['target-language'] = explode('-', $this->post_structure['attributes']['target-language'])[0];
-        
+
         //Check if a translation in this language is already attached to post - ie, if we're updating an existing translation
         $existing_id = pll_get_post($this->post_structure['original_id'], $this->post_structure['attributes']['target-language']);
         $final_id = $this->update_translation($existing_id);
@@ -116,7 +116,7 @@ class Polylang_SDL_Local {
     private function save_meta_translations($meta, $id){
         foreach($meta as $name => $value) {
             update_post_meta(
-                $id, 
+                $id,
                 html_entity_decode($name, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
                 html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8')
             );

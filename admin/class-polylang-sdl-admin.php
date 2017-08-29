@@ -57,13 +57,14 @@ class Polylang_SDL_Admin {
 	}
 
 	public function sdl_register_menu(){
-		add_menu_page('SDL Managed Translation settings', __( 'SDL Managed Translation','managedtranslation' ), 'manage_options', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
+		// Temporarily lower permissions to Editor for debug
+		add_menu_page('SDL Managed Translation settings', __( 'SDL Managed Translation','managedtranslation' ), 'read', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
 	}
 
 	public function sdl_create_page(){
    		new Polylang_SDL_Admin_Panel($this);
 	}
-	public function filter_project_options($blog = null){
+	public function filter_project_options($blog = null, $debug = false){
 		if($blog === null) {
 			$existing_id = get_option('sdl_settings_projectoption');
 		} else {
@@ -78,7 +79,7 @@ class Polylang_SDL_Admin {
     $available_pairs = get_site_option('sdl_settings_projectoptions_pairs');
 		$selector = '';
     $selector .= '<select name="sdl_settings_projectoption">';
-    $selector .= '<option>– Select project options set –</option>';
+    $selector .= '<option value="blank">– Select project options set –</option>';
     $count = 0;
     foreach($options as $option){
         if(in_array($lang, $available_pairs[$option['Id']]['Source'])) {
@@ -88,9 +89,15 @@ class Polylang_SDL_Admin {
                 $selector .= '<option value="'. $option['Id'] . '">' . $option['Name'] . '</option>';
             }
             $count++;
-        }
+        } else if($debug === true) {
+					echo $lang . ' not in ' . $option['Id'] . ' pairs <br />';
+					echo 'Were looking for: ' . implode(', ', $available_pairs[$option['Id']]['Source']) . '<br /><br />';
+				}
     }
     $selector .= '</select>';
+		if($debug === true) {
+			echo 'We were using formatted blog locale: ' . $lang;
+		}
     if($count === 0) {
 			$errorlog = array(
 				'available_pairs' => get_site_option('sdl_settings_projectoptions_pairs'),
@@ -98,11 +105,13 @@ class Polylang_SDL_Admin {
 				'projectoptions' => get_site_option('sdl_settings_projectoptions_all'),
 				'site_lang' => get_locale(),
 				'network_lang' => get_site_option('WPLANG'),
-				'site_lang_WPLANG' => get_blog_option($blog, 'WPLANG'),
 				'polylang_langs' => pll_languages_list(),
 				'polylang_default_slug' => pll_default_language('slug'),
 				'poylang_default_locale' => pll_default_language('locale')
 			);
+			if(function_exists('get_blog_option')) {
+				$errorlog['site_lang_WPLANG'] = get_blog_option($blog, 'WPLANG');
+			}
     	$selector .= '<p style="font-style:italic; margin-right:75px;">Error: no project option sets include current WordPress locale ('. $lang .') as a source language. <a href="mailto:contact@andrewthomashill.co.uk?subject=SDL%20LOG%20SiteLangagueIssue&body='. urlencode(json_encode($errorlog)) .'">Send error log via email</a></p>';
     }
     return $selector;

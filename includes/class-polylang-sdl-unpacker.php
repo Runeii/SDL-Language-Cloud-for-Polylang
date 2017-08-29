@@ -11,11 +11,6 @@ class Polylang_SDL_Unpack_XLIFF {
         $files = new Polylang_SDL_Files;
         $this->xliff_storage_path = $files->getFolder('extracted');
     }
-    private function verbose($msg) {
-    	if($this->verbose === true) {
-    		echo '<b>Console: </b>'. $msg .'<br />';
-    	}
-    }
     public function convert($id){
         $this->structure['project_id'] = $id;
         $files = scandir($this->xliff_storage_path . $id);
