@@ -57,8 +57,7 @@ class Polylang_SDL_Admin {
 	}
 
 	public function sdl_register_menu(){
-		// Temporarily lower permissions to Editor for debug
-		add_menu_page('SDL Managed Translation settings', __( 'SDL Managed Translation','managedtranslation' ), 'read', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
+		add_menu_page('SDL Managed Translation settings', __( 'SDL Managed Translation','managedtranslation' ), 'edit_pages', 'managedtranslation', array($this, 'sdl_create_page'), 'dashicons-cloud');
 	}
 
 	public function sdl_create_page(){
