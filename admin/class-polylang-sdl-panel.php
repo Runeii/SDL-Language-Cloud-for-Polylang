@@ -48,7 +48,6 @@ class Polylang_SDL_Admin_Panel {
                 $tabs['network'] = 'Network Management';
             } elseif($this->is_SDL_manager()){
                 $tabs['settings'] = 'General settings';
-                $tabs['debug'] = 'Debug';
             }
         }
         $this->tabs = $tabs;
@@ -119,9 +118,6 @@ class Polylang_SDL_Admin_Panel {
                 $sitesTable->prepare_items();
                 $sitesTable->display();
                 break;
-            case 'debug':
-              $this->build_debug();
-              break;
             case 'settings':
                 echo "<form id='general_settings' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";
                     echo '<input type="hidden" name="action" value="sdl_update_generalsettings" />';
@@ -396,99 +392,6 @@ class Polylang_SDL_Admin_Panel {
             <h4>Gain control</h4>
             <p>Use your SDL interface to track project progress, manage spend and identify savings</p>
           </div>
-        </div>
-    <?php
-  }
-  function build_debug(){
-    ?>
-    <div class="wrap about-wrap">
-        <div class="sdl-blurb">
-          <h3>Site setup</h3>
-            <div class="feature">
-              <h4>Site locale: <?php echo get_locale(); ?></h4>
-            </div>
-            <div class="feature">
-              <h4>Network lang: <?php echo get_site_option('WPLANG'); ?></h4>
-            </div>
-            <div class="feature">
-              <h4>Formatted locale: <?php echo get_formatted_locale(); ?></h4>
-            </div>
-          <?php
-            if(function_exists('get_blog_option')) { ?>
-              <div class="feature">
-                <h4>Blog lang: <?php echo get_site_option('WPLANG'); ?></h4>
-              </div>
-          <?php
-            }
-          ?>
-          <hr class="sdl-divider" style="clear:both;"></hr>
-          <h3>Managed Cloud</h3>
-          <p class="about-text">Project Options available</p>
-          <?php foreach(get_site_option('sdl_settings_projectoptions_pairs') as $id => $option) { ?>
-            <div class="feature">
-              <h4><?php echo $id; ?></h4>
-              <p>Sources: <?php echo implode(', ', $option['Source']); ?></p>
-              <p>Targets: <?php echo implode(', ', $option['Target']); ?></p>
-            </div>
-          <?php
-          } ?>
-          <hr class="sdl-divider" style="clear:both;"></hr>
-          <h3>Polylang</h3>
-          <p class="about-text">Polylang default slug: <?php echo pll_default_language('slug'); ?></p>
-          <p class="about-text">Polylang default locale: <?php echo pll_default_language('locale'); ?></p>
-          <p class="about-text">Polylang langs:</p>
-            <?php var_dump(pll_languages_list()); ?>
-          <hr class="sdl-divider" style="clear:both;"></hr>
-        </div>
-        <div style="text-align:left">
-          <h3>Full Options record</h3>
-          <?php var_dump(get_site_option('sdl_settings_projectoptions_all')); ?>
-        </div>
-        <div style="text-align:left">
-          <hr class="sdl-divider" style="clear:both;"></hr>
-          <h3>The Settings form</h3>
-          <?php
-                echo '<input type="hidden" name="action" value="sdl_update_generalsettings" />';
-                echo '<table class="form-table">';
-                echo '<tr>';
-                    echo '<th><label for="sdl_settings_projectoptions">Default project options</label></th>';
-                        echo '<td>'.$this->parent->filter_project_options(null, true).'</td>';
-                echo '</tr>';
-                echo '<tr>';
-                    echo '<th><button type="submit" form="general_settings" class="button button-primary">Save</button></th>';
-                echo '</tr>';
-          ?>
-        </div>
-        <div style="text-align:left">
-          <hr class="sdl-divider" style="clear:both;"></hr>
-          <h2>MULTI SITE SETTINGS</h2>
-          <?php
-            if(function_exists('get_sites')) {
-              $sites = get_sites();
-              $data = array();
-              foreach($sites as $site) {
-                  $details = get_blog_details($site->blog_id, true);
-                  $optionsid = get_blog_option($site->blog_id, 'sdl_settings_projectoption', '0');
-                  $lang = get_formatted_locale($site->blog_id);
-                  $pairs = get_site_option('sdl_settings_projectoptions_pairs');
-                  if($lang == '' || $lang == null) {
-                      $lang = get_locale();
-                  }
-                  $data[] = array(
-                      'blog_id' => $site->blog_id,
-                      'name' => $details->blogname,
-                      'url' => $details->path,
-                      'lang' => $lang,
-                      'activeoptions' => $optionsid,
-                      'src_lang' => $pairs[$optionsid]['Source'],
-                      'target_lang' => $pairs[$optionsid]['Target'],
-                      );
-              }
-              var_dump($data);
-            } else {
-              echo 'Not multisite';
-            }
-          ?>
         </div>
     <?php
   }
