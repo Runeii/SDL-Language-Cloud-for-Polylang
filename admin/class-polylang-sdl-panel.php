@@ -201,7 +201,7 @@ class Polylang_SDL_Admin_Panel {
             $SrcLang = array();
             foreach($ids as $id) {
                 $description .= '- ' . get_the_title($id) . '&#013;';
-                $lang = sdl_get_post_language($id);
+                $lang = polylang_sdl_get_post_language($id);
                 if($lang != false && !array_key_exists($lang, $SrcLang)) {
                     $SrcLang[] = $lang;
                 }
@@ -209,7 +209,7 @@ class Polylang_SDL_Admin_Panel {
         } else {
             $name = get_the_title($ids[0]);
             $description = 'Project created ' . date('d/m/y');
-            $SrcLang = sdl_get_post_language($ids[0]);
+            $SrcLang = polylang_sdl_get_post_language($ids[0]);
         }
         if($this->is_SDL_manager()) {
             $PIDs = get_site_option('sdl_settings_projectoptions_all');
@@ -220,7 +220,7 @@ class Polylang_SDL_Admin_Panel {
         }
         $availableLangs = array();
         foreach(pll_languages_list(array('fields' => 'locale')) as $lang) {
-          $availableLangs[] = strtolower(format_locale($lang));
+          $availableLangs[] = strtolower(polylang_sdl_format_locale($lang));
         };
         $date = date('Y-m-d', strtotime("+1 week"));
         echo "<form id='create_project' action='admin.php?page=managedtranslation' method='post' class='buttonform'>";

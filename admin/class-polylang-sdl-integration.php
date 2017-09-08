@@ -27,7 +27,7 @@ class Polylang_SDL_Polylang_Integration {
 	public function update_existing_translations($post_type, $post ){
 		$source_id = $this->post_model->get_source_id($post->ID);
 		$out_of_date = $this->post_model->get_old($post->ID);
-		$lang = sdl_get_post_language($post->ID);
+		$lang = polylang_sdl_get_post_language($post->ID);
 		if($source_id != $post->ID && is_array($out_of_date) && array_key_exists($lang, $out_of_date) && $out_of_date[$lang]['id'] == $post->ID) {
 			add_meta_box('sdl_update_post', 'Update translation', array($this, 'update_existing_translations_box'), $post_type, 'side', 'high');
 		}

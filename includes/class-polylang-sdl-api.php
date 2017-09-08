@@ -33,49 +33,39 @@ class Polylang_SDL_API {
 	// Connection functions
 	*/
 	public function call($method, $url, $data = false, $auth = false) {
-	    $curl = curl_init();
-	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-	    switch ($method)
-	    {
-	        case "POST":
-	            curl_setopt($curl, CURLOPT_POST, 1);
-
-	            if ($data)
-	                curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-	            break;
-	        case "PUT":
-	            curl_setopt($curl, CURLOPT_PUT, 1);
-	            break;
-	        case "DELETE":
-	            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-	            break;
-	        default:
-	            if ($data)
-	                $url = sprintf("%s?%s", $url, http_build_query($data));
-	    }
-	    //Is this an authorisation call, or otherwise?
-	    if($auth === true) {
-			curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			  'Content-Type: application/x-www-form-urlencoded',
+    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
+		$args = array();
+    //Is this an authorisation call, or otherwise?
+    if($auth === true) {
+			$args['headers'] => array(
+        'Content-Type' => 'application/x-www-form-urlencoded',
 			  'Expect:'
-			));
+    	);
 		} else {
-			curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-				'Authorization: Bearer ' . $this->connect_authtoken()
-			));
+			$args['headers'] => array(
+        'Authorization' => 'Bearer ' . $this->connect_authtoken(),
+    	);
 		}
-	    curl_setopt($curl, CURLOPT_URL, $url);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 		$this->verbose('Call to: '. $url);
-	    $result = curl_exec($curl);
-		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-	    curl_close($curl);
-	    $response = json_decode($result, true);
-		if($httpcode == '200') {
+    switch ($method) {
+      case "POST":
+        $args['body'] = $data;
+		    $response = wp_remote_get($url, $args);
+        break;
+      case "DELETE":
+        $args['method'] = 'DELETE';
+				$response = wp_remote_request( $url, $args );
+        break;
+      default:
+        $url = sprintf("%s?%s", $url, http_build_query($data));
+		    $response = wp_remote_get($url, $args);
+				break;
+    }
+		if($response['code'] == '200') {
 			return $response;
 		} else {
-			$this->verbose('Call failed. HTTP code: '. $httpcode);
-			return $httpcode;
+			$this->verbose('Call failed. HTTP code: '. $response['code']);
+			return $response['code'];
 		}
 	}
 	public function callJSON($url, $data) {

@@ -32,8 +32,8 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 //By default, hourly is the smallest interval available to WP-CRON. We add a custom one here
-add_filter('cron_schedules', 'custom_scheduled_interval');
-function custom_scheduled_interval($schedules) {
+add_filter('cron_schedules', 'polylang_sdl_custom_scheduled_interval');
+function polylang_sdl_custom_scheduled_interval($schedules) {
 	$schedules['15minutes'] = array('interval'=>900, 'display'=>__('Once every 15 minutes'));
 	return $schedules;
 }
@@ -79,7 +79,7 @@ function run_polylang_sdl() {
 }
 add_action('plugins_loaded', 'run_polylang_sdl');
 
-function test_dependencies()
+function polylang_sdl_test_dependencies()
 {
 	if ( ! function_exists( 'deactivate_plugins' ) ) {
 		require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
@@ -97,9 +97,9 @@ function test_dependencies()
 		wp_die( __( 'Multisite setup detected. Please activate plugin via Network administration screen.', 'managedtranslation' ), 'Plugin scope check', array( 'back_link' => true ) );
 	}
 }
-add_action('admin_init', 'test_dependencies');
+add_action('admin_init', 'polylang_sdl_test_dependencies');
 
-function sdl_poll_projects(){
+function polylang_sdl_poll_projects(){
 	$inprogress = get_option('sdl_translations_inprogress');
 	$api = new Polylang_SDL_API;
 	//Test if anything is in progress
@@ -144,9 +144,9 @@ function sdl_poll_projects(){
 		$api->verbose('None in progress');
 	}
 }
-add_action('poll_projects', 'sdl_poll_projects');
+add_action('poll_projects', 'polylang_sdl_poll_projects');
 
-function sdl_get_post_language($id = null, $option = 'slug'){
+function polylang_sdl_get_post_language($id = null, $option = 'slug'){
 	$lang = pll_get_post_language($id, $option);
 	if($lang == '' || $lang == false || $lang == null) {
 		$lang = pll_current_language();
@@ -156,7 +156,7 @@ function sdl_get_post_language($id = null, $option = 'slug'){
 	return $lang;
 }
 
-function get_formatted_locale($blog_id = null) {
+function polylang_sdl_get_formatted_locale($blog_id = null) {
 	if($blog_id === null) {
 		$site_lang = get_locale();
 	} else {
@@ -166,8 +166,8 @@ function get_formatted_locale($blog_id = null) {
 			$site_lang = $network_lang;
 		}
 	}
-	return format_locale($site_lang);
+	return polylang_sdl_format_locale($site_lang);
 }
-function format_locale($locale){
+function polylang_sdl_format_locale($locale){
 	return str_replace('_', '-', $locale);
 }

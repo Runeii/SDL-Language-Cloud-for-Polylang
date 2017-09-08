@@ -65,7 +65,7 @@ class Polylang_SDL_Model {
 		if($this->parent_id == $id) {
 			$map['parent'][$detail] = $value;
 		} else {
-			$lang = sdl_get_post_language($id);
+			$lang = polylang_sdl_get_post_language($id);
 			$map['children'][$lang][$detail] = $value;
 		}
 		$this->sync_all($id, $map);
@@ -109,7 +109,7 @@ class Polylang_SDL_Model {
 				}
 			}
 			if($target == null){
-				$target = sdl_get_post_language($id);
+				$target = polylang_sdl_get_post_language($id);
 			}
 			$this->map = $this->add_child_map($id, $target, $options_set);
 			$this->verbose('Added to post map', $this->map);
@@ -126,7 +126,7 @@ class Polylang_SDL_Model {
 	}
 	public function process_in_progress($id){
 		$this->map = $this->get_source_map($id);
-		$lang = sdl_get_post_language($id);
+		$lang = polylang_sdl_get_post_language($id);
 
 		$options_set = $this->map['in_progress'][$lang];
 
@@ -153,8 +153,8 @@ class Polylang_SDL_Model {
 		$this->map = array(
 			'parent' => array(
 				'id' => $id,
-				'lang' => sdl_get_post_language($id),
-				'locale' => format_locale(sdl_get_post_language($id, 'locale')),
+				'lang' => polylang_sdl_get_post_language($id),
+				'locale' => polylang_sdl_format_locale(polylang_sdl_get_post_language($id, 'locale')),
 				'updated' => get_the_modified_date('U', $id)
 			),
 			'children' => array(),
@@ -177,8 +177,8 @@ class Polylang_SDL_Model {
 	private function add_parent_map($parent_id, $parent_lang, $options_set = null){
 		$this->map['parent'] = array(
 			'id' => $post,
-			'lang' => sdl_get_post_language($post),
-			'locale' => format_locale(sdl_get_post_language($post, 'locale')),
+			'lang' => polylang_sdl_get_post_language($post),
+			'locale' => polylang_sdl_format_locale(polylang_sdl_get_post_language($post, 'locale')),
 			'updated' => get_the_modified_date('U', $post)
 		);
 		if($options_set != null) {
@@ -193,7 +193,7 @@ class Polylang_SDL_Model {
 		}
 		$this->map['children'][$child_lang]['id'] = $child_id;
 		$this->map['children'][$child_lang]['lang'] = $child_lang;
-		$this->map['children'][$child_lang]['locale'] = format_locale(sdl_get_post_language($child_id, 'locale'));
+		$this->map['children'][$child_lang]['locale'] = polylang_sdl_format_locale(polylang_sdl_get_post_language($child_id, 'locale'));
 		$this->map['children'][$child_lang]['updated'] = get_the_modified_date('U', $child_id);
 
 		if($options_set != null) {

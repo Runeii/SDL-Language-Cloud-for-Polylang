@@ -91,7 +91,7 @@ class SDL_Sites_Table extends WP_List_Table
         foreach($sites as $site) {
             $details = get_blog_details($site->blog_id, true);
             $optionsid = get_blog_option($site->blog_id, 'sdl_settings_projectoption', '0');
-            $lang = get_formatted_locale($site->blog_id);
+            $lang = polylang_sdl_get_formatted_locale($site->blog_id);
             if($lang == '' || $lang == null) {
                 $lang = get_locale();
             }

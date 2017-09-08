@@ -69,7 +69,7 @@ class Polylang_SDL_Admin {
 		} else {
 			$existing_id = get_blog_option($blog, 'sdl_settings_projectoption', '0');
 		}
-    $lang = get_formatted_locale($blog);
+    $lang = polylang_sdl_get_formatted_locale($blog);
     $options = get_site_option('sdl_settings_projectoptions_all');
     if($options === null || $options === false) {
         $API = new Polylang_SDL_API();
