@@ -198,7 +198,7 @@ class Polylang_SDL_Admin_Actions {
                 $output = openssl_encrypt($_POST[$option], 'AES-256-CBC', hash('sha256', wp_salt()), 0, substr(hash('sha256', 'managedtranslation'), 0, 16));
                 $output = base64_encode($output);
                 update_site_option($option, $output);
-            } else if (isset($_POST[$option])) {
+            } elseif (isset($_POST[$option])) {
                 update_site_option($option, $_POST[$option]);
             } else {
                 delete_site_option($option);

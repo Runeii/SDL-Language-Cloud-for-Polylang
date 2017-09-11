@@ -36,13 +36,13 @@ class Polylang_SDL_Unpack_XLIFF {
     	foreach($units as $unit) {
     		if($unit->getAttribute('resname') == 'title') {
     			$this->structure['title'] = $unit->getElementsByTagName('target')->item(0)->nodeValue;
-    		} else if($unit->getAttribute('resname') == 'body') {
+    		} elseif($unit->getAttribute('resname') == 'body') {
     			$this->structure['body'] = $unit->getElementsByTagName('target')->item(0)->nodeValue;
-    		} else if($unit->getAttribute('resname') == 'taxonomy') {
+    		} elseif($unit->getAttribute('resname') == 'taxonomy') {
     			$type = $unit->getAttribute('wp_taxonomy');
                 $id = $unit->getAttribute('wp_id');
     			$this->structure['taxonomy'][$type][$id] = $unit->getElementsByTagName('target')->item(0)->nodeValue;
-    		} else if($unit->getAttribute('resname') == 'meta') {
+    		} elseif($unit->getAttribute('resname') == 'meta') {
                 $this->structure['meta'][$unit->getAttribute('wp_meta')] = $unit->getElementsByTagName('target')->item(0)->nodeValue;
             }
     	}

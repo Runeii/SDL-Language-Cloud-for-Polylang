@@ -84,7 +84,7 @@ class Polylang_SDL_Admin_Posts {
 			echo '<div id="message" class="error notice notice-error">
 							<h3>' . __( 'Warning', 'managedtranslation') . '</h3>
 							<p>' . __( 'No languages set up in Polylang. Please configure Polylang to enable SDL Managed Translation functionality.', 'managedtranslation') . '</p></div>';
-		} else if ( ! empty( $_REQUEST['translation_success'] ) ) {
+		} elseif ( ! empty( $_REQUEST['translation_success'] ) ) {
 		    $emailed_count = intval( $_REQUEST['translation_success'] );
 		    printf( '<div id="message" class="updated fade">' .
 		      _n( 'Successfully sent %s post to the Managed Translation service for translation.',
@@ -92,11 +92,11 @@ class Polylang_SDL_Admin_Posts {
 		        $emailed_count,
 		        'managedtranslation'
 		      ) . '</div>', $emailed_count );
-	  	} else if ( ! empty( $_REQUEST['translation_error'] ) ) {
+	  	} elseif ( ! empty( $_REQUEST['translation_error'] ) ) {
 		    print( '<div id="message" class="updated fade">' .
 		    	__( 'Translation failed: ' . $_REQUEST['translation_error'], 'managedtranslation') .
 		    	'</div>' );
-	  	} else if ( ! empty( $_REQUEST['update_success'] ) ) {
+	  	} elseif ( ! empty( $_REQUEST['update_success'] ) ) {
 		    $updated_count = intval( $_REQUEST['update_success'] );
 		    printf( '<div id="message" class="updated fade">' .
 		      _n( 'Successfully sent %s translations to the Managed Translation service for update.',
@@ -104,11 +104,11 @@ class Polylang_SDL_Admin_Posts {
 		        $updated_count,
 		        'managedtranslation'
 		      ) . '</div>', $updated_count );
-	  	} else if ( ! empty( $_REQUEST['update_error'] ) ) {
+	  	} elseif ( ! empty( $_REQUEST['update_error'] ) ) {
 		    print( '<div id="message" class="updated fade">' .
 		    	__( 'Translation update failed: ' . $_REQUEST['update_error'], 'managedtranslation') .
 		    	'</div>' );
-	  	} else if ( ! empty( $_REQUEST['update_success_total'] ) ) {
+	  	} elseif ( ! empty( $_REQUEST['update_success_total'] ) ) {
 		    $updated_count = intval( $_REQUEST['update_success'] );
 		    printf( '<div id="message" class="updated fade">' .
 		      _n( 'Successfully sent %s translations to the Managed Translation service for update.',
@@ -116,11 +116,11 @@ class Polylang_SDL_Admin_Posts {
 		        $updated_count,
 		        'managedtranslation'
 		      ) . '</div>', $updated_count );
-		} else if ( ! empty( $_REQUEST['update_error_total'] ) ) {
+		} elseif ( ! empty( $_REQUEST['update_error_total'] ) ) {
 		    print( '<div id="message" class="updated fade">' .
 		    	__( 'Failed to send translations for update: ' . $_REQUEST['update_error_total'], 'managedtranslation') .
 		    	'</div>' );
-		} else if ( ! empty( $_REQUEST['update_success_partial'] ) ) {
+		} elseif ( ! empty( $_REQUEST['update_success_partial'] ) ) {
 		    $updated_count = intval($_REQUEST['update_success_partial'][0]);
 		    $error_count = intval($_REQUEST['update_success_partial'][1]);
 		    printf( '<div id="message" class="updated fade">' .

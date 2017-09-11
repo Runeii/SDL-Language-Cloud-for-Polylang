@@ -62,8 +62,8 @@ class Polylang_SDL_Create_XLIFF {
 
     	$this->build_structure($id);
     	$this->build_XLIFF();
-		$this->doc->save($this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff');
-        return $this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff';
+			$this->doc->save($this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff');
+      return $this->xliff_storage_path . $this->attributes['original'] . '_' . $target . '.xliff';
     }
 
     private function build_structure($id){
@@ -118,7 +118,7 @@ class Polylang_SDL_Create_XLIFF {
                     $body->appendChild($unit);
                     $tax_i++;
                 }
-            } else if($name == 'meta') {
+            } elseif($name == 'meta') {
                 $meta_i = 0;
                 foreach($content as $meta => $value) {
                     $unit = $this->create_transUnit('meta_' . $meta_i, $value, 'meta', $meta);

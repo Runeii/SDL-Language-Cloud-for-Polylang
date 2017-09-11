@@ -55,11 +55,11 @@ class Polylang_SDL_Admin_Panel {
     private function set_default(){
         if(isset( $_GET['tab'] ) ) {
             $this->current_tab = $_GET[ 'tab' ];
-        } else if(isset( $this->tabs['network'] )) {
+        } elseif(isset( $this->tabs['network'] )) {
             $this->current_tab = 'network';
-          } else if(isset( $this->tabs['settings'] )) {
+          } elseif(isset( $this->tabs['settings'] )) {
               $this->current_tab = 'settings';
-          } else if(isset( $this->tabs['account'] )) {
+          } elseif(isset( $this->tabs['account'] )) {
             $this->current_tab = 'welcome';
         } else {
             if($this->loggedin == true){

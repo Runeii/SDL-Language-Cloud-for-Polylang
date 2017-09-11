@@ -37,93 +37,127 @@ class Polylang_SDL_API {
 		$args = array();
     //Is this an authorisation call, or otherwise?
     if($auth === true) {
-			$args['headers'] => array(
+			$args['headers'] = array(
         'Content-Type' => 'application/x-www-form-urlencoded',
 			  'Expect:'
     	);
+		} elseif ($method === 'JSON') {
+			$args['headers'] = array(
+        'Content-Type' => 'application/json',
+	      'Authorization' => 'Bearer ' . $this->connect_authtoken()
+    	);
 		} else {
-			$args['headers'] => array(
+			$args['headers'] = array(
         'Authorization' => 'Bearer ' . $this->connect_authtoken(),
     	);
 		}
 		$this->verbose('Call to: '. $url);
     switch ($method) {
+			case "JSON":
+				$data = json_encode($data);
       case "POST":
         $args['body'] = $data;
-		    $response = wp_remote_get($url, $args);
+		    $response = wp_remote_post($url, $args);
         break;
       case "DELETE":
         $args['method'] = 'DELETE';
 				$response = wp_remote_request( $url, $args );
         break;
       default:
-        $url = sprintf("%s?%s", $url, http_build_query($data));
+				if ($data) {
+	        $url = sprintf("%s?%s", $url, http_build_query($data));
+				}
 		    $response = wp_remote_get($url, $args);
 				break;
     }
-		if($response['code'] == '200') {
-			return $response;
+		$code = wp_remote_retrieve_response_code($response);
+		$body = wp_remote_retrieve_body($response);
+		if($code == '200') {
+			return json_decode($body, true);
 		} else {
-			$this->verbose('Call failed. HTTP code: '. $response['code']);
-			return $response['code'];
-		}
-	}
-	public function callJSON($url, $data) {
-	    $curl = curl_init();
-	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-
-	    curl_setopt($curl, CURLOPT_POST, 1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, JSON_encode($data));
-
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			'Content-Type: application/json',
-			'Authorization: Bearer ' . $this->connect_authtoken()
-		));
-	    curl_setopt($curl, CURLOPT_URL, $url);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-	    $result = curl_exec($curl);
-		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-	    curl_close($curl);
-	    $response = json_decode($result, true);
-		if($httpcode == '200') {
-			return $response;
-		} else {
-			$this->verbose('JSON call failed. HTTP code: '. $httpcode . '. ', $response);
-			return $httpcode;
+			$this->verbose('Call failed. Error '. $code . ': ' . wp_remote_retrieve_response_message($response));
+			return $code;
 		}
 	}
 
+	public function file_upload($xliff, $optionsid) {
+		set_time_limit(0);
+		$url = 'https://languagecloud.sdl.com/tm4lc/api/v1/files/' . $optionsid;
+
+		$boundary = wp_generate_password( 24 );
+		$headers = array(
+			'Authorization' => 'Bearer ' . $this->connect_authtoken(),
+			'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
+			'Expect' => ''
+		);
+		$post = array('ProjectOptionsID' => $optionsid);
+
+		// Due to wp_remote_post not working with multipart/form-data, below is a hack to workaround.
+		$payload = '';
+		foreach ( $post as $name => $value ) {
+			$payload .= '--' . $boundary;
+			$payload .= "\r\n";
+			$payload .= 'Content-Disposition: form-data; name="' . $name . '"' . "\r\n\r\n";
+			$payload .= $value;
+			$payload .= "\r\n";
+		}
+		// Upload the file
+		if ( $xliff ) {
+		 $payload .= '--' . $boundary;
+		 $payload .= "\r\n";
+		 $payload .= 'Content-Disposition: form-data; name="' . 'upload' . '"; filename="' . basename( $xliff ) . '"' . "\r\n";
+		 $payload .= "\r\n";
+		 $payload .= file_get_contents( $xliff );
+		 $payload .= "\r\n";
+		}
+		$payload .= '--' . $boundary . '--';
+		$response = wp_remote_post( $url,
+			array(
+				'headers'    => $headers,
+				'body'       => $payload,
+			)
+		);
+		$code = wp_remote_retrieve_response_code($response);
+		$body = wp_remote_retrieve_body($response);
+		if($code == '201') {
+			return json_decode($body, true);
+		} else {
+			$this->verbose('Upload failed. HTTP code: '. $code);
+			return $code;
+		}
+	}
 	//$response = $this->download('/projects/'. $id . '/zip', $args, $id, $folder);
 	public function download($url, $data = false, $name, $where) {
 		set_time_limit(0);
-    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
-    $curl = curl_init($streamurl);
-		$this->verbose('Stream URL: '. $streamurl);
+
     $output = $where . $name . '.zip';
   	if(file_exists($output)) {
 			$this->verbose("File exists, deleting:". $output);
   		unlink($output);
   	}
-		$file = fopen ($output, 'w+');
+
+    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
+		$args = array(
+			'timeout' => 50,
+			'stream' => true,
+			'filename' => $output,
+			'headers' => array(
+			  'Authorization' => 'Bearer ' . $this->connect_authtoken(),
+	      'Content-Type' => 'application/x-www-form-urlencoded',
+			  'Expect' => ''
+	  	)
+		);
+    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
+
+		$this->verbose('Stream URL: '. $streamurl);
+		$response = wp_remote_get($streamurl, $args);
 		$this->verbose("Downloading to:". $output);
 
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-		  'Authorization: Bearer ' . $this->connect_authtoken(),
-		  'Content-Type: application/x-www-form-urlencoded'
-		));
-		curl_setopt($curl, CURLOPT_TIMEOUT, 50);
-		curl_setopt($curl, CURLOPT_FILE, $file);
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_exec($curl);
-		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-		curl_close($curl);
-		fclose($file);
-		if($httpcode == '200') {
+		$code = wp_remote_retrieve_response_code($response);
+		if($code == '200') {
 			return $output;
 		} else {
-			$this->verbose($httpcode . ": Couldn't download project zip.");
+			$this->verbose($code . ": Couldn't download project zip.");
 			return false;
 		}
 	}
@@ -257,10 +291,10 @@ class Polylang_SDL_API {
 	public function project_updateStatus($id, $status) {
 		if($status == 'approve') {
 			return $this->call('POST', '/projects/' . $id);
-		} else if($status == 'cancel') {
+		} elseif($status == 'cancel') {
 			//TODO: Need to check that status is awaiting approval
 			return $this->call('DELETE', '/projects/' . $id);
-		} else if($status == 'complete') {
+		} elseif($status == 'complete') {
 			//TODO: Need to check that status is awaiting download
 			return $this->call('DELETE', '/projects/' . $id);
 		}
@@ -278,7 +312,7 @@ class Polylang_SDL_API {
 			'Vendors' => Sets the vendor ID for this project,
 			'Due date' => When the project is due
 		) */
-		return $this->callJSON('/projects', $args);
+		return $this->call('JSON', '/projects', $args);
 	}
 
 	/*
@@ -338,39 +372,6 @@ class Polylang_SDL_API {
 			return $codes[$code];
 		} else {
 			return $codes[$code][$value];
-		}
-	}
-	/*
-	// Translation
-	*/
-	public function file_upload($file, $optionsid) {
-		set_time_limit(0);
-	    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1/files/' . $optionsid;
-		if (function_exists('curl_file_create')) {
-		  $cFile = curl_file_create($file, 'application/xliff+xml' , basename($file));
-		} else {
-		  $cFile = '@' . realpath($file);
-		}
-		$post = array('file'=> $cFile, 'ProjectOptionsID' => $optionsid);
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-			'Authorization: Bearer ' . $this->connect_authtoken(),
-			'Content-Type: multipart/form-data',
-			'Expect:'
-		));
-		curl_setopt($curl, CURLOPT_URL,$url);
-		curl_setopt($curl, CURLOPT_POST,1);
-		curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
-	    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-		$result = curl_exec ($curl);
-		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-		curl_close ($curl);
-	    $response = json_decode($result, true);
-		if($httpcode == '201') {
-			return $response;
-		} else {
-			$this->verbose('Upload failed. HTTP code: '. $httpcode);
-			return $httpcode;
 		}
 	}
 	/*
