@@ -129,35 +129,32 @@ class Polylang_SDL_API {
 	//$response = $this->download('/projects/'. $id . '/zip', $args, $id, $folder);
 	public function download($url, $data = false, $name, $where) {
 		set_time_limit(0);
-
+    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
+    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
+    $curl = curl_init($streamurl);
+		$this->verbose('Stream URL: '. $streamurl);
     $output = $where . $name . '.zip';
   	if(file_exists($output)) {
 			$this->verbose("File exists, deleting:". $output);
   		unlink($output);
   	}
-
-    $url = 'https://languagecloud.sdl.com/tm4lc/api/v1' . $url;
-		$args = array(
-			'timeout' => 50,
-			'stream' => true,
-			'filename' => $output,
-			'headers' => array(
-			  'Authorization' => 'Bearer ' . $this->connect_authtoken(),
-	      'Content-Type' => 'application/x-www-form-urlencoded',
-			  'Expect' => ''
-	  	)
-		);
-    $streamurl = sprintf("%s?%s", $url, http_build_query($data));
-
-		$this->verbose('Stream URL: '. $streamurl);
-		$response = wp_remote_get($streamurl, $args);
+		$file = fopen ($output, 'w+');
 		$this->verbose("Downloading to:". $output);
-
-		$code = wp_remote_retrieve_response_code($response);
-		if($code == '200') {
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+		  'Authorization: Bearer ' . $this->connect_authtoken(),
+		  'Content-Type: application/x-www-form-urlencoded'
+		));
+		curl_setopt($curl, CURLOPT_TIMEOUT, 50);
+		curl_setopt($curl, CURLOPT_FILE, $file);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_exec($curl);
+		$httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close($curl);
+		fclose($file);
+		if($httpcode == '200') {
 			return $output;
 		} else {
-			$this->verbose($code . ": Couldn't download project zip.");
+			$this->verbose($httpcode . ": Couldn't download project zip.");
 			return false;
 		}
 	}
